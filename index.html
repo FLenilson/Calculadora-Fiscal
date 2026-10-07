@@ -1,757 +1,864 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Interna </title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <style>
-        :root {
-            /* Paleta PRO Premium */
-            --bg-body: #f8fafc;
-            --surface: #ffffff;
-            --primary-dark: #0b1120;
-            --primary-light: #1e293b;
-            --accent-blue: #3b82f6;
-            --accent-hover: #2563eb;
-            --text-heading: #0f172a;
-            --text-main: #334155;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --border-focus: #bfdbfe;
-            --success: #10b981;
-            --success-bg: #ecfdf5;
-            --success-border: #a7f3d0;
-            --warning: #f59e0b;
-            --warning-bg: #fffbeb;
-            --warning-border: #fde68a;
-            --danger: #ef4444;
-            --input-readonly: #f1f5f9;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; }
-
-        .sidebar { width: 280px; background: var(--primary-dark); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
-        .logo { padding: 32px 24px 24px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .logo h2 { font-size: 19px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
-        .logo h2 i { color: var(--accent-blue); }
-        .logo span { font-size: 11px; color: #94a3b8; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; display: inline-block; background: rgba(59, 130, 246, 0.15); padding: 4px 8px; border-radius: 4px; }
-        
-        .nav-item { padding: 14px 24px; margin: 6px 16px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 500; color: #94a3b8; cursor: pointer; transition: all 0.3s ease; }
-        .nav-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; transform: translateX(4px); }
-        .nav-item.active { background: var(--accent-blue); color: #ffffff; font-weight: 600; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-
-        .main { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
-        
-        .topbar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); height: 76px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; flex-shrink: 0; position: sticky; top: 0; z-index: 5; }
-        .breadcrumb { font-size: 14px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; }
-        .breadcrumb strong { color: var(--text-heading); font-weight: 700; margin-left: 6px; }
-        .user-profile { display: flex; align-items: center; gap: 14px; }
-        .user-info { text-align: right; line-height: 1.3; }
-        .user-name { font-weight: 700; font-size: 14px; color: var(--text-heading); }
-        .user-role { font-size: 12px; font-weight: 600; color: var(--success); }
-        .user-badge { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-hover)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
-
-        .workspace { padding: 40px; max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
-        .view-section { display: flex; flex-direction: column; gap: 28px; width: 100%; animation: fadeIn 0.4s ease-out; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .agenda-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 36px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent-blue); }
-        .agenda-title { display: flex; align-items: center; gap: 20px; }
-        .agenda-title i { background: var(--bg-body); padding: 16px; border-radius: var(--radius-lg); font-size: 24px; color: var(--accent-blue); }
-        .agenda-title h1 { font-size: 20px; font-weight: 800; color: var(--text-heading); margin-bottom: 4px; }
-        .agenda-title span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-        
-        .agenda-badges { display: flex; gap: 16px; }
-        .badge-date { background: var(--bg-body); border: 1px solid var(--border); padding: 12px 20px; border-radius: var(--radius-md); text-align: center; min-width: 130px; }
-        .badge-date span { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-        .badge-date strong { font-size: 16px; font-weight: 800; color: var(--text-heading); }
-
-        .search-container { background: var(--surface); padding: 8px 8px 8px 24px; border-radius: 100px; display: flex; align-items: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-        .search-container input { flex-grow: 1; border: none; padding: 14px 20px; font-size: 15px; outline: none; background: transparent; }
-        .btn-analisar { background: var(--primary-dark); color: #fff; border: none; padding: 14px 32px; border-radius: 100px; font-weight: 600; font-size: 14px; cursor: pointer; }
-
-        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); display: flex; flex-direction: column; box-shadow: var(--shadow-md); overflow: hidden; }
-        .p-head { padding: 24px 36px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: rgba(248, 250, 252, 0.5); }
-        .p-head i { color: var(--accent-blue); font-size: 18px; }
-        .p-body { padding: 36px; display: flex; flex-direction: column; gap: 32px; }
-
-        .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-        .g2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-        .col { display: flex; flex-direction: column; gap: 16px; }
-        
-        .fg { display: flex; flex-direction: column; gap: 8px; }
-        .fg label { font-size: 13px; font-weight: 600; color: var(--text-main); }
-        .fg input, .fg select { padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 14px; font-weight: 600; text-align: right; outline: none; }
-        .fg select { text-align: left; cursor: pointer; background-color: var(--surface); }
-        .fg input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue); }
-        .fg input[readonly] { background: var(--input-readonly); color: var(--text-muted); cursor: default; border-color: transparent; }
-
-        .sec-title { font-size: 14px; font-weight: 800; color: var(--text-heading); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 8px; display: inline-block; }
-        
-        .hl-bruto { font-weight: 800 !important; color: var(--accent-blue) !important; background: #eff6ff !important; border-color: var(--accent-blue) !important; }
-        .hl-ajuste { font-weight: 700 !important; color: var(--text-heading) !important; }
-        .hl-err { color: var(--danger) !important; font-weight: 700 !important; background: #fef2f2 !important; }
-        .hl-ok { color: var(--success) !important; font-weight: 800 !important; background: #ecfdf5 !important; border-color: var(--success-border) !important; font-size: 16px !important; }
-
-        .alert-box { padding: 18px 24px; display: flex; align-items: flex-start; gap: 16px; font-size: 14px; font-weight: 500; border-radius: var(--radius-md); line-height: 1.5; }
-        .reinf-alert { background: var(--warning-bg); border: 1px solid var(--warning-border); color: #b45309; }
-        .simples-alert { background: var(--success-bg); border: 1px solid var(--success-border); color: #047857; }
-        
-        .liminar-alert { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; display: none; margin-top: 10px; padding: 12px 16px;}
-        .liminar-alert i { color: #2563eb; font-size: 18px; margin-top: 2px;}
-
-        .b-bar { padding: 20px 36px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
-        .btn-recalc { padding: 12px 28px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; border: 1px solid var(--border); color: var(--text-heading); background: var(--surface); box-shadow: var(--shadow-sm); }
-        .btn-recalc.primary { background: var(--accent-blue); color: #fff; border: none; }
-
-        .footer { text-align: center; margin-top: auto; font-size: 13px; font-weight: 500; color: var(--text-muted); padding: 32px 0; }
-        .footer span { font-weight: 700; color: var(--primary-dark); }
-        
-        /* Oculto na tela, visível apenas no PDF */
-        .area-assinatura { display: none; }
-
-        /* --- ESTILOS EXCLUSIVOS PARA IMPRESSÃO E PDF (RPA) --- */
-        @media print {
-            body { background: #ffffff; }
-            .sidebar, .topbar, .b-bar, .alert-box { display: none !important; }
-            .main { background: #ffffff; overflow: visible; display: block; }
-            .workspace { padding: 0; margin: 0; max-width: 100%; display: block; }
-            .panel { box-shadow: none; border: none; display: block; }
-            .p-head { border-bottom: 2px solid #000; padding: 0 0 15px 0; background: #fff !important; color: #000; }
-            .p-body { padding: 10px 0; display: block; }
-            .sec-title { color: #000; border-bottom: 1px solid #000; padding-bottom: 5px; margin-top: 15px; }
-            .g2, .g4 { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px !important; }
-            .g2 > *, .g4 > * { flex: 1 1 45%; min-width: 200px; }
-            .col { border: 1px solid #ccc; padding: 15px; border-radius: 8px; break-inside: avoid; }
-            .fg label { color: #000; }
-            .fg input, .fg select { border: none; border-bottom: 1px dashed #999; border-radius: 0; padding: 4px; background: transparent !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            
-            .area-assinatura { display: block !important; margin-top: 80px; text-align: center; page-break-inside: avoid; }
-            .linha-assinatura { width: 350px; border-bottom: 1px solid #000; margin: 0 auto 10px auto; }
-            .footer { display: none; }
-        }
-
-        @media (max-width: 1024px) { .g4 { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px) { 
-            .g4, .g2 { grid-template-columns: 1fr; } 
-            body{ flex-direction: column;} 
-            .sidebar{width:100%;} 
-            .agenda-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            .agenda-badges { flex-wrap: wrap; width: 100%; }
-            .badge-date { flex-grow: 1; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Fiscal – Unimed Vale do Sepotuba</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f2f6f4;--sf:#fff;--dk:#0a5f55;--dk2:#074a42;--ac:#00995d;--ac2:#007a4a;--lm:#b1d34b;--h:#123c35;--tx:#33413d;--mu:#62736e;--bd:#dce6e2;--ok:#00995d;--okb:#e8f6ef;--okbd:#a9dcc2;--wa:#b45309;--wab:#fff8eb;--wabd:#fcd9a0;--er:#c62828;--erb:#fdf1f1;--erbd:#f5c2c2;--inb:#eef6f3;--inbd:#bcdccf;--in:#0a5f55;--ro:#f1f5f3;--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--tx);display:flex;height:100vh;overflow:hidden;font-size:13px;-webkit-font-smoothing:antialiased}
+.sidebar{width:232px;background:linear-gradient(180deg,var(--dk) 0%,var(--dk2) 100%);color:#fff;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.logo{padding:14px 14px 12px;border-bottom:1px solid rgba(255,255,255,.12)}.logo .lg{background:#fff;border-radius:10px;padding:8px 10px;display:flex;justify-content:center}.logo .lg img{width:100%;max-width:190px;height:auto;display:block}
+.logo h2{font-size:15px;font-weight:800;display:flex;gap:8px;align-items:center;margin-top:12px}.logo h2 i{color:var(--lm)}
+.logo span{font-size:10px;color:var(--lm);font-weight:700;letter-spacing:.8px;text-transform:uppercase;background:rgba(177,211,75,.14);padding:3px 6px;border-radius:4px;display:inline-block;margin-top:6px}
+.nav-g{font-size:10px;color:#9cc9bd;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:12px 18px 4px}
+.nav-item{padding:9px 14px;margin:2px 10px;border-radius:var(--r);display:flex;align-items:center;gap:10px;font-weight:500;color:#d4ebe4;cursor:pointer;transition:.2s;border-left:3px solid transparent}
+.nav-item i{width:16px;text-align:center}.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.16);color:#fff;font-weight:700;border-left-color:var(--lm)}
+.main{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0}
+.topbar{border-top:4px solid var(--ac);background:rgba(255,255,255,.95);backdrop-filter:blur(8px);height:52px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;position:sticky;top:0;z-index:5}
+.breadcrumb{font-weight:500;color:var(--mu)}.breadcrumb strong{color:var(--h);font-weight:700}
+.tb-r{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--mu)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--bd);background:var(--sf)}
+.workspace{padding:16px 22px;max-width:1280px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.view{display:none;flex-direction:column;gap:14px}.view.on{display:flex}
+.panel{background:var(--sf);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);overflow:hidden}
+.p-head{padding:11px 16px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bd);background:linear-gradient(90deg,#eef7f2,#fff);color:var(--h);border-left:4px solid var(--ac)}
+.p-head i{color:var(--ac)}.p-head .sp{flex:1}
+.p-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.g{display:grid;gap:10px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}.g6{grid-template-columns:repeat(6,1fr)}
+.s2{grid-column:span 2}.s3{grid-column:span 3}.sall{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:4px;min-width:0}.fg select,.fg input{width:100%;min-width:0}
+.fg label{font-size:11px;font-weight:600;color:var(--mu)}
+.fg input,.fg select,.fg textarea{padding:7px 9px;border:1px solid var(--bd);border-radius:6px;font:600 13px Inter,sans-serif;color:var(--h);outline:none;background:var(--sf)}
+.fg input:focus,.fg select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--inbd)}
+.fg input.num,.moeda,.pct{text-align:right}
+.fg input[readonly]{background:var(--ro);color:var(--mu);border-color:transparent}
+.ck{display:flex;align-items:center;gap:8px;background:#f6faf8;border:1px solid var(--bd);padding:7px 10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;color:var(--h)}
+.ck input{width:15px;height:15px;accent-color:var(--ac)}
+.ck small{display:block;font-weight:500;color:var(--mu);font-size:11px}
+.sec{font-size:12px;font-weight:800;color:var(--dk);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--okbd);padding-bottom:5px;display:flex;gap:6px;align-items:center}
+.sec i{color:var(--ac)}
+.hl{font-weight:800!important;color:var(--ac)!important;background:var(--inb)!important;border-color:var(--ac)!important}
+.btn{padding:7px 14px;border-radius:6px;font:700 12px Inter,sans-serif;cursor:pointer;border:1px solid var(--bd);color:var(--h);background:var(--sf);display:inline-flex;gap:6px;align-items:center}
+.btn:hover{background:#f6faf8}.btn.pr{background:var(--ac);color:#fff;border-color:var(--ac)}.btn.pr:hover{background:var(--ac2)}
+.btn.dk{background:var(--dk);color:#fff;border-color:var(--dk)}.btn.er{color:var(--er);border-color:var(--erbd)}.btn.sm{padding:4px 9px;font-size:11px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding:10px 16px;border-top:1px solid var(--bd);background:#f6faf8}
+.al{padding:8px 12px;display:flex;gap:9px;align-items:flex-start;border-radius:6px;line-height:1.45;font-size:12px;border:1px solid}
+.al i{margin-top:2px}
+.al.ok{background:var(--okb);border-color:var(--okbd);color:#065f46}.al.wa{background:var(--wab);border-color:var(--wabd);color:#92400e}
+.al.er{background:var(--erb);border-color:var(--erbd);color:#991b1b}.al.in{background:#f0f5fb;border-color:#c9d9ec;color:#1f3f66}
+.alerts{display:flex;flex-direction:column;gap:6px}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--dk);font-weight:700;padding:6px 8px;border-bottom:2px solid var(--okbd);background:#f3f9f6;position:sticky;top:0}
+table.t td{padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t tr.tot td{font-weight:800;color:var(--dk);background:#eef7f2;border-top:2px solid var(--bd)}
+table.t tr.det td{background:#fafcff}
+.tw{overflow:auto;max-height:520px;border:1px solid var(--bd);border-radius:8px}
+.bd{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10.5px;font-weight:800;white-space:nowrap}
+.bd.ok{background:var(--okb);color:var(--ok)}.bd.wa{background:var(--wab);color:var(--wa)}.bd.er{background:var(--erb);color:var(--er)}.bd.in{background:var(--inb);color:var(--dk)}.bd.mu{background:var(--ro);color:var(--mu)}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-top:3px solid var(--ac);border-radius:10px;padding:10px 12px}
+.kpi span{font-size:10.5px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}
+.kpi strong{display:block;font-size:18px;font-weight:800;color:var(--h);margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi small{font-size:11px;color:var(--mu)}
+.res{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.big{border-radius:10px;padding:10px 14px;border:1px solid}
+.big span{font-size:11px;font-weight:700;text-transform:uppercase}.big strong{display:block;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.big.ret{background:var(--erb);border-color:var(--erbd);color:var(--er)}.big.liq{background:var(--ac);border-color:var(--ac);color:#fff}
+.drop{border:2px dashed var(--okbd);background:var(--inb);border-radius:10px;padding:18px;text-align:center;color:var(--dk);cursor:pointer;font-weight:600}
+.drop.hov{border-color:var(--ac);background:#d9f0e4}
+.search{display:flex;gap:8px;background:var(--sf);border:1px solid var(--bd);border-radius:30px;padding:5px 5px 5px 16px;align-items:center}
+.search input{flex:1;border:none;outline:none;font:600 14px Inter,sans-serif;padding:6px;text-transform:uppercase}
+.search .btn{border-radius:30px;padding:9px 20px}
+.mu{color:var(--mu)}.b{font-weight:700}.h{color:var(--h)}.ok-t{color:var(--ok)}.er-t{color:var(--er)}.wa-t{color:var(--wa)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+details summary{cursor:pointer;font-weight:700;color:var(--h)}
+.cl label{display:flex;gap:8px;padding:5px 0;border-bottom:1px dashed var(--bd);cursor:pointer}
+.footer{text-align:center;font-size:11px;color:var(--mu);padding:14px 0;margin-top:auto;border-top:1px solid var(--bd)}.footer b{color:var(--dk)}
+#print-area{display:none}
+@media print{
+ body{display:block;background:#fff;height:auto;overflow:visible;font-size:11px}
+ .sidebar,.main,#toast{display:none!important}
+ #print-area{display:block!important;padding:10px;color:#000}
+ .rh{display:flex;align-items:center;gap:16px;border-bottom:3px solid #00995d;padding-bottom:8px;margin-bottom:10px}.rh img{height:46px;width:auto}.rh .rt{flex:1}.rh .rt h1{font-size:15px;margin:0;color:#0a5f55}.rh .rt div{font-size:10.5px;color:#444}.rh .rd{font-size:10px;text-align:right;color:#444}
+ #print-area h1{font-size:15px;margin-bottom:4px}#print-area h2{font-size:12px;margin:12px 0 4px;border-bottom:1px solid #00995d;color:#0a5f55}#print-area th{background:#eef7f2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ #print-area table{width:100%;border-collapse:collapse}#print-area td,#print-area th{border:1px solid #999;padding:4px 6px;text-align:left}
+ #print-area .n{text-align:right}.ass{margin-top:60px;text-align:center}.ass div{width:320px;border-bottom:1px solid #000;margin:0 auto 6px}
+}
+@media(max-width:1100px){.g5,.g6{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){body{flex-direction:column;height:auto;overflow-x:hidden}.topbar{height:auto;padding:8px 12px;flex-wrap:wrap;gap:6px}.p-head{flex-wrap:wrap}.sidebar{width:100%;flex-direction:row;overflow-x:auto}.logo,.nav-g{display:none}.nav-item{white-space:nowrap}
+ .g2,.g3,.g4,.g5,.g6,.res{grid-template-columns:1fr}.s2,.s3{grid-column:auto}.workspace{padding:12px}}
+</style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo">
-            <h2><i class="fa-solid fa-layer-group"></i> Auditor Fiscal</h2>
-            <span>Pro Premium 3.2</span>
-        </div>
-        <div class="nav-item active" id="nav-cnpj" onclick="alternarAba('cnpj')"><i class="fa-solid fa-building"></i> Consulta CNPJ</div>
-        <div class="nav-item" id="nav-avulso" onclick="alternarAba('avulso')"><i class="fa-solid fa-file-invoice-dollar"></i> Calculadora Híbrida</div>
-        <div class="nav-item" id="nav-rpa" onclick="alternarAba('rpa')"><i class="fa-solid fa-user-tie"></i> Módulo RPA</div>
-    </div>
+<div class="sidebar">
+ <div class="logo"><div class="lg"><img id="logo-img" src="data:image/png;base64,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" alt="Unimed Vale do Sepotuba"></div><h2><i class="fa-solid fa-calculator"></i> Calculadora Fiscal</h2><span>Versão 4.1 · Reforma 2026</span></div>
+ <div class="nav-g">Visão geral</div>
+ <div class="nav-item" data-v="painel"><i class="fa-solid fa-gauge-high"></i> Painel & Agenda</div>
+ <div class="nav-g">Cálculo</div>
+ <div class="nav-item" data-v="cnpj"><i class="fa-solid fa-building"></i> Consulta CNPJ</div>
+ <div class="nav-item" data-v="pj"><i class="fa-solid fa-file-invoice-dollar"></i> Retenções PJ</div>
+ <div class="nav-item" data-v="rpa"><i class="fa-solid fa-user-tie"></i> RPA Autônomo</div>
+ <div class="nav-g">Conferência</div>
+ <div class="nav-item" data-v="nfe"><i class="fa-solid fa-box"></i> NF-e Produtos</div>
+ <div class="nav-item" data-v="nfse"><i class="fa-solid fa-file-signature"></i> NFS-e Serviços</div>
+ <div class="nav-item" data-v="ferr"><i class="fa-solid fa-toolbox"></i> Validadores & Checklist</div>
+ <div class="nav-g">Gestão</div>
+ <div class="nav-item" data-v="reforma"><i class="fa-solid fa-scale-balanced"></i> Reforma Tributária</div>
+ <div class="nav-item" data-v="hist"><i class="fa-solid fa-chart-column"></i> Histórico & Métricas</div>
+ <div class="nav-item" data-v="cfg"><i class="fa-solid fa-gear"></i> Configurações</div>
+</div>
 
-    <div class="main">
-        <div class="topbar">
-            <div class="breadcrumb">
-                <i class="fa-solid fa-shield-halved" style="color: var(--accent-blue); margin-right: 12px; font-size: 18px;"></i>
-                Painel de Auditoria / <strong id="txt-modulo-atual">Calculadora Fiscal Interna</strong>
-            </div>
-            <div class="user-profile">
-                <div class="user-info">
-                    <div class="user-name">Acesso Corporativo</div>
-                    <div class="user-role"><i class="fa-solid fa-circle-check"></i> Ambiente Seguro</div>
-                </div>
-                <div class="user-badge"><i class="fa-solid fa-building-user"></i></div>
-            </div>
-        </div>
+<div class="main">
+ <div class="topbar">
+  <div class="breadcrumb"><i class="fa-solid fa-calculator" style="color:var(--ac);margin-right:8px"></i>Calculadora Fiscal / <strong id="txt-mod">Painel</strong></div>
+  <div class="tb-r"><span class="chip"><i class="fa-solid fa-scale-balanced" style="color:var(--ac)"></i> Tabelas 2026</span><span class="chip" id="chip-hoje"></span></div>
+ </div>
+ <div class="workspace">
 
-        <div class="workspace">
-            
-            <!-- ABA CONSULTA CNPJ -->
-            <div id="view-cnpj" class="view-section">
-                <!-- Agenda Fiscal Header -->
-                <div class="agenda-header">
-                    <div class="agenda-title">
-                        <i class="fa-regular fa-calendar-check"></i>
-                        <div><h1>Agenda Fiscal</h1><span>Vencimentos da competência atual</span></div>
-                    </div>
-                    <!-- AGENDA CORRIGIDA COM AS DATAS AQUI -->
-                    <div class="agenda-badges">
-                        <div class="badge-date"><span>DAS (Simples)</span><strong>Dia 20</strong></div>
-                        <div class="badge-date"><span>INSS / IRRF</span><strong>Dia 20</strong></div>
-                        <div class="badge-date"><span>PIS / COFINS</span><strong>Dia 25</strong></div>
-                        <div class="badge-date"><span>ISSQN</span><strong>Dia 25</strong></div>
-                    </div>
-                </div>
+<!-- ================= PAINEL ================= -->
+<div id="view-painel" class="view">
+ <div class="g g4" id="kpis"></div>
+ <div class="g g2">
+  <div class="panel">
+   <div class="p-head"><i class="fa-regular fa-calendar-check"></i> Agenda Fiscal <span class="sp"></span><input type="month" id="ag_mes" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px"></div>
+   <div class="p-body" style="padding:0"><table class="t" id="ag_tab"></table></div>
+  </div>
+  <div class="panel">
+   <div class="p-head"><i class="fa-solid fa-hourglass-half"></i> A recolher (registros do histórico)</div>
+   <div class="p-body" style="padding:0"><div class="tw" style="border:none;max-height:330px"><table class="t" id="ag_rec"></table></div></div>
+  </div>
+ </div>
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-book-open"></i> Parâmetros legais vigentes (out/2026)</div>
+  <div class="p-body"><div class="g g3" style="font-size:12px;line-height:1.55">
+   <div><b class="h">IRRF – Lei 15.270/2025</b><br>Tabela progressiva mantida (isento até R$ 2.428,80 · 27,5% acima de R$ 4.664,68). Redução mensal: rendimento tributável ≤ R$ 5.000,00 → IR zerado (até R$ 312,89); R$ 5.000,01–7.350,00 → R$ 978,62 − 0,133145 × rendimento. Dependente R$ 189,59 · desconto simplificado R$ 607,20.</div>
+   <div><b class="h">INSS 2026</b><br>Teto R$ 8.475,55 · salário mínimo R$ 1.621,00 (Portaria Interministerial MPS/MF nº 13/2026). Contribuinte individual a serviço de empresa: retenção de 11% até o teto; patronal 20% sem teto. Cessão de mão de obra/empreitada: 11% (IN RFB 2.110/2022).</div>
+   <div><b class="h">Reforma Tributária – 2026</b><br>Ano-teste: CBS 0,9% · IBS UF 0,1% · IBS Mun 0%. Recolhimento dispensado se cumpridas as obrigações acessórias. NF-e/NFC-e de emitente regime normal (CRT 3) sem grupo IBS/CBS rejeitada desde 03/08/2026 (rej. 1115). Simples/MEI: a partir de 04/01/2027.</div>
+   <div><b class="h">CNPJ alfanumérico</b><br>Emitido para novas inscrições desde 31/07/2026. Letras nas 12 primeiras posições; DV numérico, módulo 11 com valor ASCII − 48. Este sistema já aceita e valida o formato.</div>
+   <div><b class="h">Retenções PJ (tomador privado)</b><br>IR 1,5% (art. 714 RIR/2018) ou 1% (art. 716) · CSRF 4,65% (Lei 10.833/2003, art. 30) · dispensa de IR e CSRF ≤ R$ 10,00 · Simples Nacional sem IR/CSRF; INSS só no Anexo IV.</div>
+   <div><b class="h">Obrigações</b><br>DIRF extinta – informações via eSocial (S-1210) e EFD-Reinf (R-4010/R-4020). INSS retido de cessão de mão de obra: R-2010. Fato gerador do IR/CSRF: pagamento; do INSS retido: emissão da NF.</div>
+  </div></div>
+ </div>
+</div>
 
-                <div class="search-container">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="cnpj_input" placeholder="Consultar CNPJ do fornecedor..." maxlength="18">
-                    <button class="btn-analisar" id="btn_consultar" onclick="buscarCNPJ()">Analisar Empresa</button>
-                </div>
+<!-- ================= CNPJ ================= -->
+<div id="view-cnpj" class="view">
+ <div class="search"><i class="fa-solid fa-magnifying-glass mu"></i><input id="cnpj_in" placeholder="CNPJ do fornecedor (numérico ou alfanumérico)" maxlength="18"><button class="btn dk" id="cnpj_btn">Analisar empresa</button></div>
+ <div id="cnpj_res"></div>
+ <div class="panel"><div class="p-head"><i class="fa-solid fa-clock-rotate-left"></i> Consultas recentes <span class="sp"></span><button class="btn sm er" onclick="limparCache()">Limpar</button></div><div class="p-body" style="padding:0"><table class="t" id="cnpj_cache"></table></div></div>
+</div>
 
-                <div class="panel" id="result_box" style="display: none;">
-                    <div class="p-head"><i class="fa-solid fa-clipboard-check"></i> Diagnóstico Cadastral e Tributário</div>
-                    <div class="p-body">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 24px;">
-                            <div>
-                                <h2 id="res_nome" style="font-size: 20px; font-weight: 800; color: var(--text-heading); margin-bottom: 8px;">Razão Social</h2>
-                                <p style="font-size: 14px; color: var(--text-muted); font-weight: 500;">CNPJ: <span id="res_cnpj" style="color: var(--text-heading); font-weight: 700;"></span> &nbsp;•&nbsp; Fantasia: <span id="res_fantasia"></span></p>
-                            </div>
-                            <div class="fg" style="min-width: 280px;">
-                                <label>Enquadramento Tributário Alvo:</label>
-                                <select id="pj_override_enquadramento" onchange="forçarMudançaEnquadramento()">
-                                    <option value="SIMPLES">Optante Simples Nacional</option>
-                                    <option value="NORMAL" selected>Regime Normal (Presumido / Real)</option>
-                                </select>
-                            </div>
-                        </div>
+<!-- ================= RETENÇÕES PJ ================= -->
+<div id="view-pj" class="view">
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-file-invoice-dollar"></i> Retenções na fonte – Pessoa Jurídica <span class="sp"></span><span class="bd in" id="pj_tag">Regime Normal</span></div>
+  <div class="p-body">
+   <div class="sec"><i class="fa-solid fa-id-card"></i> 1. Documento e prestador</div>
+   <div class="g g6">
+    <div class="fg"><label>CNPJ</label><input id="pj_cnpj" maxlength="18" style="text-transform:uppercase"></div>
+    <div class="fg s2"><label>Razão social</label><input id="pj_nome"></div>
+    <div class="fg"><label>Nº NFS-e / NF</label><input id="pj_nf"></div>
+    <div class="fg"><label>Data de emissão</label><input type="date" id="pj_emi"></div>
+    <div class="fg"><label>Data do pagamento</label><input type="date" id="pj_pag"></div>
+   </div>
+   <div class="sec"><i class="fa-solid fa-sitemap"></i> 2. Enquadramento</div>
+   <div class="g g4">
+    <div class="fg"><label>Regime do prestador</label><select id="pj_reg"><option value="NORMAL">Regime Normal (Presumido/Real)</option><option value="SIMPLES">Simples Nacional (ME/EPP)</option><option value="MEI">MEI</option></select></div>
+    <div class="fg s2"><label>Natureza do serviço (aplica alíquotas padrão)</label><select id="pj_preset"></select></div>
+    <div class="fg"><label>Código DARF IR</label><input id="pj_dar" readonly></div>
+    <label class="ck pj-simp"><input type="checkbox" id="pj_anexo4"><span>Simples – Anexo IV<small>Limpeza, vigilância, obras: sofre INSS 11%</small></span></label>
+    <label class="ck pj-mei"><input type="checkbox" id="pj_mei18b"><span>MEI – art. 18-B LC 123<small>Hidráulica, elétrica, pintura, alvenaria, carpintaria, manut. veículos: CPP 20% do tomador</small></span></label>
+   </div>
+   <div id="pj_cnae_hint"></div>
+   <div class="sec"><i class="fa-solid fa-calculator"></i> 3. Valores</div>
+   <div class="g g6">
+    <div class="fg s2"><label>Valor bruto do serviço (R$)</label><input class="moeda hl" id="pj_bruto" value="0,00"></div>
+    <div class="fg"><label>Desconto incondicionado</label><input class="moeda" id="pj_desc" value="0,00"></div>
+    <div class="fg"><label>Retém ISS?</label><select id="pj_issret"><option value="1">Sim – tomador responsável</option><option value="0">Não – prestador recolhe</option></select></div>
+    <div class="fg"><label>Alíquota ISS (%)</label><input class="pct" id="pj_iss" value="2,00"></div>
+    <div class="fg"><label>Líquido informado na NF</label><input class="moeda" id="pj_liqinf" value="0,00" title="Opcional: confronta com o líquido calculado"></div>
+   </div>
+   <details><summary><i class="fa-solid fa-sliders"></i> Parâmetros avançados (ajustados pela natureza – editáveis)</summary>
+   <div class="g g6" style="margin-top:10px">
+    <div class="fg"><label>IRRF (%)</label><input class="pct" id="pj_ir" value="1,50"></div>
+    <div class="fg"><label>CSRF (PIS/COFINS/CSLL)</label><select id="pj_csrf"><option value="1">Reter 4,65%</option><option value="0">Não reter</option></select></div>
+    <div class="fg"><label>INSS</label><select id="pj_inss"><option value="0">Não retém</option><option value="11">11% cessão/empreitada</option><option value="3.5">3,5% (prestador na CPRB)</option><option value="custom">Alíquota manual</option></select></div>
+    <div class="fg"><label>Alíq. INSS manual (%)</label><input class="pct" id="pj_inss_aliq" value="11,00"></div>
+    <div class="fg"><label>Base INSS (% do serviço)</label><select id="pj_inss_base"><option value="100">100%</option><option value="50">50% (equip. não discriminado)</option><option value="30">30% (transporte/equip.)</option><option value="custom">Personalizada</option></select></div>
+    <div class="fg"><label>Base personalizada (%)</label><input class="pct" id="pj_inss_bp" value="100,00"></div>
+    <div class="fg"><label>Materiais/equip. discriminados</label><input class="moeda" id="pj_inss_ded" value="0,00"></div>
+    <div class="fg"><label>Adicional apos. especial</label><select id="pj_inss_adic"><option value="0">Não</option><option value="4">+4% (15 anos)</option><option value="3">+3% (20 anos)</option><option value="2">+2% (25 anos)</option></select></div>
+    <label class="ck s2"><input type="checkbox" id="pj_inss_disp"><span>Hipótese de dispensa de INSS<small>Sem empregados / profissão regulamentada prestada pessoalmente pelos sócios (IN 2.110/2022)</small></span></label>
+    <label class="ck"><input type="checkbox" id="pj_lim_ir"><span>Liminar/isenção IR</span></label>
+    <label class="ck"><input type="checkbox" id="pj_lim_csrf"><span>Liminar/isenção CSRF</span></label>
+    <label class="ck"><input type="checkbox" id="pj_lim_inss"><span>Liminar INSS</span></label>
+    <label class="ck"><input type="checkbox" id="pj_ibscbs" checked><span>Mostrar IBS/CBS (teste)</span></label>
+   </div></details>
+   <div class="sec"><i class="fa-solid fa-receipt"></i> 4. Memória de cálculo</div>
+   <div class="tw" style="max-height:none"><table class="t" id="pj_tab"></table></div>
+   <div class="res"><div class="big ret"><span>Total retido</span><strong id="pj_tot">R$ 0,00</strong></div><div class="big liq"><span>Líquido a pagar</span><strong id="pj_liq">R$ 0,00</strong></div></div>
+   <div class="alerts" id="pj_al"></div>
+  </div>
+  <div class="bar"><button class="btn" onclick="limparPJ()"><i class="fa-solid fa-eraser"></i> Limpar</button><button class="btn" onclick="imprimirPJ()"><i class="fa-solid fa-print"></i> Memória (PDF)</button><button class="btn pr" onclick="registrarPJ()"><i class="fa-solid fa-floppy-disk"></i> Registrar no histórico</button></div>
+ </div>
+</div>
 
-                        <!-- Alertas de Regime -->
-                        <div class="alert-box reinf-alert" id="reinf_alert">
-                            <i class="fa-solid fa-circle-exclamation"></i>
-                            <div><strong>Atenção à EFD-REINF:</strong> Fornecedor enquadrado no Regime Normal. Retenções na fonte obrigatórias de acordo com os serviços.</div>
-                        </div>
-                        <div class="alert-box simples-alert" id="simples_alert" style="display: none;">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <div><strong>Simples Nacional Identificado:</strong> Dispensa legal aplicada para retenções federais (IR e CSRF).</div>
-                        </div>
+<!-- ================= RPA ================= -->
+<div id="view-rpa" class="view">
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-user-tie"></i> RPA – Pagamento a Pessoa Física (contribuinte individual) <span class="sp"></span><span class="bd in">eSocial S-1200 · S-1210 → DCTFWeb</span></div>
+  <div class="p-body">
+   <div class="sec"><i class="fa-solid fa-id-card"></i> 1. Trabalhador (eSocial)</div>
+   <div class="g g6">
+    <div class="fg s2"><label>Nome</label><input id="rp_nome"></div>
+    <div class="fg"><label>CPF</label><input id="rp_cpf" maxlength="14"></div>
+    <div class="fg"><label>NIT/PIS</label><input id="rp_nit"></div>
+    <div class="fg"><label>CBO</label><input id="rp_cbo" maxlength="7" placeholder="ex.: 2251-25"></div>
+    <div class="fg"><label>Categoria eSocial</label><select id="rp_cat"><option value="701">701 – Contribuinte individual (autônomo em geral)</option><option value="711">711 – Transportador autônomo de passageiros</option><option value="712">712 – Transportador autônomo de carga</option><option value="741">741 – MEI (serviços art. 18-B)</option></select></div>
+    <div class="fg s3"><label>Descrição do serviço</label><input id="rp_serv"></div>
+    <div class="fg"><label>Competência (perApur S-1200)</label><input type="month" id="rp_comp"></div>
+    <div class="fg"><label>Data do pagamento (S-1210)</label><input type="date" id="rp_pag"></div>
+    <div class="fg"><label>Alíquota do segurado</label><select id="rp_contr"><option value="11">11% – retido pela Unimed (padrão)</option><option value="20">20% – contratante isenta de cota patronal</option></select></div>
+   </div>
+   <div class="sec"><i class="fa-solid fa-layer-group"></i> 2. Acúmulos no mês e múltiplos vínculos</div>
+   <div class="g g6">
+    <div class="fg"><label>Remuneração em outras empresas</label><input class="moeda" id="rp_ext" value="0,00" title="Declaração/contracheque do trabalhador – gera remunOutrEmpr"></div>
+    <div class="fg"><label>Bruto já pago no mês (Unimed)</label><input class="moeda" id="rp_ant" value="0,00"></div>
+    <div class="fg"><label>IRRF já retido no mês (Unimed)</label><input class="moeda" id="rp_irant" value="0,00"></div>
+    <div class="fg"><label>Dependentes (IR)</label><input type="number" class="num" id="rp_dep" value="0" min="0"></div>
+    <div class="fg"><label>Pensão alimentícia</label><input class="moeda" id="rp_pens" value="0,00"></div>
+    <div class="fg"><label>ISS (%) se aplicável</label><input class="pct" id="rp_iss" value="0,00"></div>
+   </div>
+   <div class="sec"><i class="fa-solid fa-money-bill-wave"></i> 3. Recibo</div>
+   <div class="g g6">
+    <div class="fg s2"><label>Valor bruto do recibo (R$)</label><input class="moeda hl" id="rp_bruto" value="0,00"></div>
+    <div class="fg"><label>Outros descontos</label><input class="moeda" id="rp_out" value="0,00"></div>
+    <div class="fg s3"><label>&nbsp;</label><div class="mu" style="font-size:11.5px;line-height:1.4" id="rp_cathint"></div></div>
+   </div>
+   <div class="tw" style="max-height:none"><table class="t" id="rp_tab"></table></div>
+   <div class="res"><div class="big ret"><span>Total de descontos do prestador</span><strong id="rp_tot">R$ 0,00</strong></div><div class="big liq"><span>Líquido a pagar</span><strong id="rp_liq">R$ 0,00</strong></div></div>
+   <div class="sec"><i class="fa-solid fa-file-export"></i> 4. Dados para o eSocial e recolhimento</div>
+   <div class="g g2"><div class="tw" style="max-height:none"><table class="t" id="rp_es"></table></div><div class="tw" style="max-height:none"><table class="t" id="rp_dctf"></table></div></div>
+   <div class="alerts" id="rp_al"></div>
+  </div>
+  <div class="bar"><button class="btn" onclick="limparRPA()"><i class="fa-solid fa-eraser"></i> Limpar</button><button class="btn" onclick="imprimirRPA()"><i class="fa-solid fa-print"></i> Imprimir RPA</button><button class="btn pr" onclick="registrarRPA()"><i class="fa-solid fa-floppy-disk"></i> Registrar no histórico</button></div>
+ </div>
+</div>
 
-                        <div id="calc_module_pj">
-                            <h4 class="sec-title mt-4">1. Parâmetros de Exceção (Liminares e Bases Reduzidas)</h4>
-                            <div class="g2 federais-col" style="margin-top: 16px; margin-bottom: 24px;">
-                                <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid var(--border); padding: 14px 20px; border-radius: var(--radius-md);">
-                                    <input type="checkbox" id="pj_isencao_federais" onchange="rodarCalculoPJ()">
-                                    <div>
-                                        <label for="pj_isencao_federais" style="font-weight: 700; color: var(--text-heading); cursor: pointer; font-size: 14px;">Possui Isenção ou Liminar Judicial (Não Reter Federais)</label>
-                                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Zera IR, PIS, COFINS e CSLL independentemente do regime tributário.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="alert-box liminar-alert" id="pj_liminar_msg">
-                                <i class="fa-solid fa-scale-balanced"></i>
-                                <div><strong>Força-Tarefa Judicial:</strong> Retenções federais suspensas manualmente no motor de cálculo.</div>
-                            </div>
+<!-- ================= NF-e ================= -->
+<div id="view-nfe" class="view">
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-box"></i> Conferência de NF-e (modelo 55/65) por XML</div>
+  <div class="p-body">
+   <div class="drop" id="nfe_drop"><i class="fa-solid fa-cloud-arrow-up" style="font-size:20px"></i><br>Arraste os XMLs (procNFe) aqui ou clique para selecionar – vários de uma vez<input type="file" id="nfe_file" accept=".xml" multiple hidden></div>
+   <div class="row mu" style="font-size:11.5px">Verifica: protocolo, DV da chave, destinatário, totais (vNF e itens), CFOP × destino, DIFAL, grupo IBS/CBS 2026 (alíquotas 0,9%/0,1%/0% e valores). Processamento local – nada é enviado.</div>
+   <div id="nfe_kpi" class="g g5"></div>
+   <div class="tw"><table class="t" id="nfe_tab"></table></div>
+  </div>
+  <div class="bar"><button class="btn" onclick="nfeLote=[];renderNFe()"><i class="fa-solid fa-trash"></i> Limpar lote</button><button class="btn" onclick="exportLote('nfe')"><i class="fa-solid fa-file-excel"></i> Exportar lote</button><button class="btn pr" onclick="registrarLote('nfe')"><i class="fa-solid fa-floppy-disk"></i> Registrar lote</button></div>
+ </div>
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-calculator"></i> Conferência manual de totais (sem XML)</div>
+  <div class="p-body"><div class="g g6" id="nfm"></div><div class="alerts" id="nfm_al"></div></div>
+ </div>
+</div>
 
-                            <h4 class="sec-title mt-4">2. Motor de Cálculo (Nota Fiscal)</h4>
-                            <div class="g4" style="margin-top: 16px; margin-bottom: 24px;">
-                                <div class="fg" style="grid-column: span 2;">
-                                    <label>Valor Bruto da NF (R$):</label>
-                                    <input type="text" id="pj_faturamento" class="moeda hl-bruto" value="0,00" oninput="rodarCalculoPJ()">
-                                </div>
-                                <div class="fg">
-                                    <label>Alíquota do ISS (%):</label>
-                                    <input type="text" id="pj_a_iss" class="porcentagem hl-ajuste" value="0,00" oninput="rodarCalculoPJ()">
-                                </div>
-                                <div class="fg">
-                                    <label>Retenção de INSS (Cessão):</label>
-                                    <select id="pj_incide_inss" onchange="rodarCalculoPJ()">
-                                        <option value="0">Não Retém</option>
-                                        <option value="11_100">Sim (11% sobre 100% da NF)</option>
-                                        <option value="11_50">Sim (11% sobre Base 50%)</option>
-                                        <option value="11_30" selected>Sim (11% sobre Base 30%)</option>
-                                    </select>
-                                </div>
-                            </div>
+<!-- ================= NFS-e ================= -->
+<div id="view-nfse" class="view">
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-file-signature"></i> Conferência de NFS-e por XML (Padrão Nacional e ABRASF)</div>
+  <div class="p-body">
+   <div class="g g4">
+    <div class="fg s2"><label>Natureza padrão do lote (recalcula retenções esperadas)</label><select id="ns_preset"></select></div>
+    <div class="fg"><label>Retém ISS no lote?</label><select id="ns_issret"><option value="auto">Conforme XML</option><option value="1">Sim</option><option value="0">Não</option></select></div>
+    <div class="fg"><label>INSS esperado</label><select id="ns_inss"><option value="preset">Conforme natureza</option><option value="0">Não retém</option><option value="11">11% s/ 100%</option></select></div>
+   </div>
+   <div class="drop" id="ns_drop"><i class="fa-solid fa-cloud-arrow-up" style="font-size:20px"></i><br>Arraste os XMLs de NFS-e aqui ou clique para selecionar<input type="file" id="ns_file" accept=".xml" multiple hidden></div>
+   <div id="ns_kpi" class="g g5"></div>
+   <div class="tw"><table class="t" id="ns_tab"></table></div>
+  </div>
+  <div class="bar"><button class="btn" onclick="nsLote=[];renderNS()"><i class="fa-solid fa-trash"></i> Limpar lote</button><button class="btn" onclick="exportLote('nfse')"><i class="fa-solid fa-file-excel"></i> Exportar lote</button><button class="btn pr" onclick="registrarLote('nfse')"><i class="fa-solid fa-floppy-disk"></i> Registrar lote</button></div>
+ </div>
+</div>
 
-                            <div class="g4">
-                                <div class="col federais-col">
-                                    <div class="fg"><label>PIS (0,65%):</label><input type="text" id="pj_v_pis" readonly></div>
-                                    <div class="fg"><label>COFINS (3,00%):</label><input type="text" id="pj_v_cofins" readonly></div>
-                                </div>
-                                <div class="col federais-col">
-                                    <div class="fg"><label>CSLL (1,00%):</label><input type="text" id="pj_v_csll" readonly></div>
-                                    <div class="fg"><label>IRPJ (1,50%):</label><input type="text" id="pj_v_ir" readonly></div>
-                                </div>
-                                <div class="col">
-                                    <div class="fg"><label>INSS Retido:</label><input type="text" id="pj_v_inss" readonly></div>
-                                    <div class="fg"><label>ISS Retido na Fonte:</label><input type="text" id="pj_v_iss" readonly></div>
-                                </div>
-                                <div class="col mt-auto">
-                                    <div class="fg"><label>Somatório Retido:</label><input type="text" id="pj_total_retido" class="hl-err" readonly></div>
-                                    <div class="fg"><label>Valor Líquido a Pagar:</label><input type="text" id="pj_liquido" class="hl-ok" readonly></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="b-bar"><button class="btn-recalc primary" onclick="rodarCalculoPJ()">Processar Cálculos PJ</button></div>
-                </div>
-            </div>
+<!-- ================= FERRAMENTAS ================= -->
+<div id="view-ferr" class="view">
+ <div class="g g2">
+  <div class="panel"><div class="p-head"><i class="fa-solid fa-key"></i> Chave de acesso (NF-e / NFC-e / CT-e / MDF-e)</div>
+   <div class="p-body"><div class="fg"><label>Chave (44 posições)</label><input id="fx_chave" class="mono" maxlength="60" style="text-transform:uppercase"></div><div id="fx_chave_r"></div></div></div>
+  <div class="panel"><div class="p-head"><i class="fa-solid fa-fingerprint"></i> Validador CNPJ (inclusive alfanumérico) / CPF</div>
+   <div class="p-body"><div class="fg"><label>CNPJ ou CPF</label><input id="fx_doc" class="mono" maxlength="20" style="text-transform:uppercase"></div><div id="fx_doc_r"></div></div></div>
+ </div>
+ <div class="g g2">
+  <div class="panel"><div class="p-head"><i class="fa-solid fa-list-check"></i> Checklist de recebimento de nota <span class="sp"></span><button class="btn sm" onclick="document.querySelectorAll('#cl input').forEach(i=>i.checked=false)">Reiniciar</button></div>
+   <div class="p-body cl" id="cl"></div></div>
+  <div class="panel"><div class="p-head"><i class="fa-solid fa-table-list"></i> CFOP – referência rápida <span class="sp"></span><input id="cf_q" placeholder="filtrar" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px;width:130px"></div>
+   <div class="p-body" style="padding:0"><div class="tw" style="border:none;max-height:360px"><table class="t" id="cf_tab"></table></div></div></div>
+ </div>
+</div>
 
-            <!-- ABA AVULSA HÍBRIDA -->
-            <div id="view-avulso" class="view-section" style="display: none;">
-                <div class="panel">
-                    <div class="p-head" id="av_titulo"><i class="fa-solid fa-bolt"></i> Calculadora Avulsa (Híbrida)</div>
-                    <div class="p-body">
-                        
-                        <div class="g4" style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 24px;">
-                            <div class="fg" style="grid-column: span 2;">
-                                <label>Selecione o Tipo de Prestador:</label>
-                                <select id="av_tipo_pessoa" onchange="alternarTipoAvulso()" style="background-color: #f8fafc; font-size: 15px;">
-                                    <option value="PJ">Pessoa Jurídica (CNPJ)</option>
-                                    <option value="PF">Pessoa Física (Autônomo/CPF)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="fg av-only-pj" style="grid-column: span 2;">
-                                <label>Regime Tributário (Fornecedor):</label>
-                                <select id="av_regime" onchange="rodarCalculoAvulso()">
-                                    <option value="NORMAL">Regime Normal (Lucro Presumido/Real)</option>
-                                    <option value="SIMPLES">Optante pelo Simples Nacional</option>
-                                </select>
-                            </div>
-                        </div>
+<!-- ================= REFORMA ================= -->
+<div id="view-reforma" class="view">
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-scale-balanced"></i> Simulador de transição IBS/CBS (EC 132/2023 · LC 214/2025)</div>
+  <div class="p-body">
+   <div class="g g6">
+    <div class="fg s2"><label>Valor da operação (R$)</label><input class="moeda hl" id="rf_v" value="10.000,00"></div>
+    <div class="fg"><label>Tipo</label><select id="rf_tipo"><option value="S">Serviço (ISS)</option><option value="M">Mercadoria (ICMS)</option></select></div>
+    <div class="fg"><label>ISS / ICMS atual (%)</label><input class="pct" id="rf_loc" value="2,00"></div>
+    <div class="fg"><label>PIS/COFINS atual</label><select id="rf_pc"><option value="3.65">Cumulativo 3,65%</option><option value="9.25">Não cumulativo 9,25%</option></select></div>
+    <div class="fg"><label>Redução de alíquota</label><select id="rf_red"><option value="0">Nenhuma (padrão)</option><option value="30">30% – profissões regulamentadas</option><option value="60" selected>60% – saúde, medicamentos, dispositivos médicos</option><option value="100">100% – alíquota zero</option></select></div>
+    <div class="fg"><label>CBS referência (%) – estimativa</label><input class="pct" id="rf_cbs" value="8,80"></div>
+    <div class="fg"><label>IBS referência (%) – estimativa</label><input class="pct" id="rf_ibs" value="17,70"></div>
+   </div>
+   <div class="tw" style="max-height:none"><table class="t" id="rf_tab"></table></div>
+   <div class="al in"><i class="fa-solid fa-circle-info"></i><div>Simulação simplificada sobre o valor informado (sem gross-up e sem créditos). As alíquotas de referência definitivas serão fixadas por resolução do Senado; ajuste os campos. 2027–2028: PIS/COFINS extintos, CBS cheia (−0,1 p.p.), IBS 0,1% teste; 2029–2032: ICMS/ISS a 90/80/70/60% e IBS a 10/20/30/40%; 2033: modelo pleno. Operadoras de planos de saúde têm <b>regime específico</b> na LC 214/2025 (base por receitas menos sinistros) – esta tela serve para os <b>serviços e bens adquiridos</b>.</div></div>
+  </div>
+ </div>
+ <div class="panel"><div class="p-head"><i class="fa-solid fa-road"></i> O que conferir nas notas recebidas em 2026</div>
+  <div class="p-body" style="font-size:12px;line-height:1.6"><div class="g g2">
+   <div><b class="h">NF-e (produtos)</b><br>• Grupo <span class="mono">IBSCBS</span> por item com CST (3 dígitos) e cClassTrib.<br>• pCBS = 0,90 · pIBSUF = 0,10 · pIBSMun = 0,00; reduções em <span class="mono">gRed/pRedAliq</span>.<br>• Totais em <span class="mono">IBSCBSTot</span> batendo com a soma dos itens.<br>• IBS/CBS são “por fora”: não somam ao vNF em 2026.<br>• Emitente CRT 3 sem grupo após 03/08/2026 → XML não deveria estar autorizado.</div>
+   <div><b class="h">NFS-e (serviços)</b><br>• Padrão Nacional (DPS) obrigatório desde jan/2026 para os municípios aderentes – conferir cTribNac e local de incidência.<br>• Retenções federais em <span class="mono">tribFed</span> (vRetIRRF, vRetCSLL, vRetCP, PIS/COFINS com tpRetPisCofins).<br>• ISS: tpRetISSQN = 2 indica retenção pelo tomador.<br>• Valor líquido = serviço − descontos − retenções.<br>• Destaque de IBS/CBS informativo; recolhimento dispensado em 2026.</div>
+  </div></div></div>
+</div>
 
-                        <!-- Opção Liminar na Calculadora Avulsa -->
-                        <div class="g2 av-only-pj federais-col-av" style="margin-bottom: 24px;">
-                            <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid var(--border); padding: 10px 16px; border-radius: var(--radius-md);">
-                                <input type="checkbox" id="av_isencao_federais" onchange="rodarCalculoAvulso()">
-                                <div>
-                                    <label for="av_isencao_federais" style="font-weight: 700; color: var(--text-heading); cursor: pointer; font-size: 13px;">Isenção / Liminar Judicial</label>
-                                    <p style="font-size: 11px; color: var(--text-muted);">Zerar federais (IR e CSRF)</p>
-                                </div>
-                            </div>
-                        </div>
+<!-- ================= HISTÓRICO ================= -->
+<div id="view-hist" class="view">
+ <div class="g g6" id="h_kpi"></div>
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-chart-column"></i> Métricas por tributo e fornecedor</div>
+  <div class="p-body"><div class="g g2"><div class="tw" style="max-height:300px"><table class="t" id="h_trib"></table></div><div class="tw" style="max-height:300px"><table class="t" id="h_forn"></table></div></div></div>
+ </div>
+ <div class="panel">
+  <div class="p-head"><i class="fa-solid fa-table"></i> Registros <span class="sp"></span>
+   <input type="date" id="h_de" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px"> <input type="date" id="h_ate" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px">
+   <select id="h_tipo" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px"><option value="">Todos</option><option>PJ</option><option>RPA</option><option>NF-e</option><option>NFS-e</option></select>
+   <select id="h_st" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px"><option value="">Status</option><option value="OK">OK</option><option value="ALERTA">Alerta</option><option value="ERRO">Erro</option></select>
+   <input id="h_q" placeholder="buscar" style="font:600 12px Inter;border:1px solid var(--bd);border-radius:6px;padding:3px 6px;width:120px"></div>
+  <div class="p-body" style="padding:0"><div class="tw" style="border:none"><table class="t" id="h_tab"></table></div></div>
+  <div class="bar"><button class="btn er" onclick="limparHist()"><i class="fa-solid fa-trash"></i> Apagar tudo</button><label class="btn"><i class="fa-solid fa-upload"></i> Restaurar backup<input type="file" accept=".json" hidden onchange="importHist(this)"></label><button class="btn" onclick="backupHist()"><i class="fa-solid fa-download"></i> Backup JSON</button><button class="btn" onclick="imprimirHist()"><i class="fa-solid fa-print"></i> Relatório (PDF)</button><button class="btn pr" onclick="exportHist()"><i class="fa-solid fa-file-excel"></i> Exportar Excel</button></div>
+ </div>
+</div>
 
-                        <div class="g4" style="margin-bottom: 32px;">
-                            <div class="fg" style="grid-column: span 2;">
-                                <label>Valor Bruto da NF / Recibo (R$):</label>
-                                <input type="text" id="av_faturamento" class="moeda hl-bruto" value="0,00" oninput="rodarCalculoAvulso()">
-                            </div>
-                            <div class="fg">
-                                <label>Alíquota de ISS (%):</label>
-                                <input type="text" id="av_a_iss" class="porcentagem hl-ajuste" value="0,00" oninput="rodarCalculoAvulso()">
-                            </div>
-                            <div class="fg av-only-pj">
-                                <label>Regra de Base do INSS:</label>
-                                <select id="av_incide_inss" onchange="rodarCalculoAvulso()">
-                                    <option value="0">Não Retém</option>
-                                    <option value="11_100">Sim (11% sobre 100%)</option>
-                                    <option value="11_50">Sim (11% sobre Base 50%)</option>
-                                    <option value="11_30" selected>Sim (11% sobre Base 30%)</option>
-                                </select>
-                            </div>
-                            <div class="fg av-only-pf" style="display: none;">
-                                <label>Qtd. Dependentes (IR):</label>
-                                <input type="number" id="av_pf_dependentes" value="0" min="0" oninput="rodarCalculoAvulso()" style="text-align: right;">
-                            </div>
-                        </div>
+<!-- ================= CONFIG ================= -->
+<div id="view-cfg" class="view">
+ <div class="panel"><div class="p-head"><i class="fa-solid fa-building-user"></i> Tomador e parâmetros</div>
+  <div class="p-body"><div class="g g6">
+   <div class="fg"><label>CNPJ do tomador (Unimed)</label><input id="cf_cnpj" style="text-transform:uppercase"></div>
+   <div class="fg s2"><label>Outros CNPJs aceitos (filiais, separados por vírgula)</label><input id="cf_cnpjs" style="text-transform:uppercase"></div>
+   <div class="fg"><label>UF do tomador</label><input id="cf_uf" maxlength="2" style="text-transform:uppercase"></div>
+   <div class="fg"><label>Município</label><input id="cf_mun"></div>
+   <div class="fg"><label>Tolerância de diferença (R$)</label><input class="moeda" id="cf_tol"></div>
+   <div class="fg"><label>ISS padrão (%)</label><input class="pct" id="cf_iss"></div>
+   <div class="fg sall"><label>Feriados municipais/estaduais (dd/mm, separados por vírgula)</label><input id="cf_fer" placeholder="ex.: 20/11, 13/05"></div>
+  </div></div>
+  <div class="bar"><button class="btn pr" onclick="salvarCfg()"><i class="fa-solid fa-floppy-disk"></i> Salvar</button></div></div>
+ <div class="panel"><div class="p-head"><i class="fa-regular fa-calendar"></i> Regras da agenda (editáveis) <span class="sp"></span><button class="btn sm" onclick="addAgenda()">+ Linha</button><button class="btn sm" onclick="resetAgenda()">Padrão</button></div>
+  <div class="p-body" style="padding:0"><table class="t" id="cf_ag"></table></div>
+  <div class="bar"><button class="btn pr" onclick="salvarAgenda()"><i class="fa-solid fa-floppy-disk"></i> Salvar agenda</button></div></div>
+</div>
 
-                        <!-- Grid Resultados PJ -->
-                        <div class="g4 av-only-pj" id="av_grid_pj">
-                            <div class="col av-federais-col-av">
-                                <div class="fg"><label>PIS (0,65%):</label><input type="text" id="av_v_pis" readonly></div>
-                                <div class="fg"><label>COFINS (3,00%):</label><input type="text" id="av_v_cofins" readonly></div>
-                            </div>
-                            <div class="col av-federais-col-av">
-                                <div class="fg"><label>CSLL (1,00%):</label><input type="text" id="av_v_csll" readonly></div>
-                                <div class="fg"><label>IRPJ (1,50%):</label><input type="text" id="av_v_ir" readonly></div>
-                            </div>
-                            <div class="col">
-                                <div class="fg"><label>INSS Retido:</label><input type="text" id="av_v_inss" readonly></div>
-                                <div class="fg"><label>ISS Retido na Fonte:</label><input type="text" id="av_v_iss_pj" readonly></div>
-                            </div>
-                            <div class="col mt-auto">
-                                <div class="fg"><label>Total de Retenções:</label><input type="text" id="av_total_retido_pj" class="hl-err" readonly></div>
-                                <div class="fg"><label>Valor Líquido (R$):</label><input type="text" id="av_liquido_pj" class="hl-ok" readonly></div>
-                            </div>
-                        </div>
+ </div>
+ <div class="footer">© 2026 <b>Unimed Vale do Sepotuba</b> · Calculadora Fiscal – uso interno do Setor Fiscal · Ferramenta de apoio: confira a legislação e o contrato antes do pagamento.</div>
+</div>
+<div id="print-area"></div>
 
-                        <!-- Grid Resultados PF (Oculto no PJ) -->
-                        <div class="g4 av-only-pf" id="av_grid_pf" style="display: none;">
-                            <div class="col">
-                                <div class="fg"><label>Base INSS (Limitada):</label><input type="text" id="av_pf_base_inss" readonly></div>
-                                <div class="fg"><label>INSS Retido (11%):</label><input type="text" id="av_pf_v_inss" readonly></div>
-                            </div>
-                            <div class="col">
-                                <div class="fg"><label>Base para IRRF:</label><input type="text" id="av_pf_base_ir" readonly></div>
-                                <div class="fg"><label>IRRF (Tabela):</label><input type="text" id="av_pf_v_ir" readonly></div>
-                            </div>
-                            <div class="col">
-                                <div class="fg"><label>ISS Retido (Se houver):</label><input type="text" id="av_v_iss_pf" readonly></div>
-                            </div>
-                            <div class="col mt-auto">
-                                <div class="fg"><label>Total de Descontos:</label><input type="text" id="av_total_retido_pf" class="hl-err" readonly></div>
-                                <div class="fg"><label>Valor Líquido (R$):</label><input type="text" id="av_liquido_pf" class="hl-ok" readonly></div>
-                            </div>
-                        </div>
+<!-- ================= MOTOR (sem DOM) ================= -->
+<script id="engine">
+const LEG={ano:2026,teto:8475.55,salMin:1621.00,dep:189.59,simpl:607.20,min:10,
+ tab:[{l:2428.80,a:0,d:0},{l:2826.65,a:.075,d:182.16},{l:3751.05,a:.15,d:394.16},{l:4664.68,a:.225,d:675.49},{l:Infinity,a:.275,d:908.73}],
+ red:{l1:5000,m1:312.89,l2:7350,k:978.62,f:0.133145},
+ rt:{cbs:0.9,ibsUF:0.1,ibsMun:0,rej:'2026-08-03'}};
+const r2=v=>Math.round((+v+Number.EPSILON)*100)/100;
+const PRESETS={
+ prof:{n:'Serviços profissionais (art. 714 RIR/2018) – consultoria, advocacia, contabilidade, engenharia, TI etc.',ir:1.5,csrf:1,inss:'0',base:'100',dar:'1708'},
+ med:{n:'Serviços médicos/odontológicos/psicologia PJ (sem internação)',ir:1.5,csrf:1,inss:'0',base:'100',dar:'1708'},
+ hosp:{n:'Hospital, pronto-socorro, casa de saúde, ambulatório, banco de sangue (excetuados do art. 714)',ir:0,csrf:0,inss:'0',base:'100',dar:'—'},
+ limp:{n:'Limpeza, conservação, segurança, vigilância (art. 716) – com cessão de mão de obra',ir:1.0,csrf:1,inss:'11',base:'100',dar:'1708'},
+ locmo:{n:'Locação de mão de obra / terceirização (art. 716)',ir:1.0,csrf:1,inss:'11',base:'100',dar:'1708'},
+ manut:{n:'Manutenção de bens/equipamentos (sem cessão de mão de obra)',ir:0,csrf:1,inss:'0',base:'100',dar:'—'},
+ manutc:{n:'Manutenção com cessão de mão de obra',ir:0,csrf:1,inss:'11',base:'100',dar:'—'},
+ obra:{n:'Construção civil – empreitada (obra/reforma)',ir:0,csrf:0,inss:'11',base:'100',dar:'—'},
+ transv:{n:'Transporte de valores',ir:0,csrf:1,inss:'0',base:'100',dar:'—'},
+ com:{n:'Comissão, corretagem, propaganda e publicidade (art. 718)',ir:1.5,csrf:0,inss:'0',base:'100',dar:'8045'},
+ coop:{n:'Cooperativa de trabalho (serviços pessoais dos associados)',ir:1.5,csrf:0,inss:'0',base:'100',dar:'3280'},
+ transp:{n:'Transporte de cargas/passageiros (sem cessão)',ir:0,csrf:0,inss:'0',base:'100',dar:'—'},
+ loc:{n:'Locação de bens móveis/imóveis, licença de software padrão',ir:0,csrf:0,inss:'0',base:'100',dar:'—'},
+ merc:{n:'Venda de mercadorias (NF-e de produto)',ir:0,csrf:0,inss:'0',base:'100',dar:'—'},
+ pers:{n:'Personalizado (definir parâmetros)',ir:1.5,csrf:1,inss:'0',base:'100',dar:'1708'}};
+const CNAE_HINT=[[/^81(11|12|21|22|29)/,'limp'],[/^80(11|12|20)/,'limp'],[/^78(10|20|30)/,'locmo'],[/^861/,'hosp'],[/^86(30|40|50|60|90)/,'med'],[/^(69|70|71|72|73|74|62|63)/,'prof'],[/^731/,'com'],[/^41|^42|^43/,'obra'],[/^33|^95/,'manut'],[/^49|^50|^51/,'transp'],[/^77|^68/,'loc'],[/^(1|2|3[0-2]|45|46|47)/,'merc']];
+function sugerePreset(cnae){cnae=String(cnae||'').replace(/\D/g,'');for(const [re,k] of CNAE_HINT) if(re.test(cnae)) return k;return null;}
 
-                    </div>
-                    <div class="b-bar"><button class="btn-recalc primary" onclick="rodarCalculoAvulso()">Atualizar Simulação Híbrida</button></div>
-                </div>
-            </div>
+function irTabela(b){for(const f of LEG.tab) if(b<=f.l) return Math.max(0,b*f.a-f.d);return 0;}
+function irRedutor(rend,imp){if(imp<=0)return 0;if(rend<=LEG.red.l1)return Math.min(imp,LEG.red.m1);if(rend<=LEG.red.l2)return Math.min(imp,Math.max(0,LEG.red.k-LEG.red.f*rend));return 0;}
+function calcIRPF(o){const leg=(o.inss||0)+(o.dep||0)*LEG.dep+(o.pensao||0);const simpl=LEG.simpl>leg;const ded=simpl?LEG.simpl:leg;const base=Math.max(0,o.rend-ded);const tab=r2(irTabela(base));const red=r2(irRedutor(o.rend,tab));return{leg:r2(leg),simpl,ded:r2(ded),base:r2(base),tab,red,ir:r2(Math.max(0,tab-red))};}
 
-            <!-- ABA RPA -->
-            <div id="view-rpa" class="view-section" style="display: none;">
-                <div class="panel">
-                    <div class="p-head"><i class="fa-solid fa-user-tie"></i> Folha Autônomos: Múltiplos Vínculos (RPA)</div>
-                    <div class="p-body">
-                        <div>
-                            <h4 class="sec-title">1. Dados de Acúmulo e Deduções</h4>
-                            <div class="g2" style="margin-top: 16px; margin-bottom: 32px;">
-                                <div class="g2">
-                                    <div class="fg"><label>Qtd. Dependentes:</label><input type="number" id="pf_dependentes" value="0" min="0" oninput="rodarCalculoPF()" style="text-align: right;"></div>
-                                    <div class="fg"><label>Valor Dep. (R$):</label><input type="text" id="pf_val_dep" class="moeda hl-ajuste" value="189,59" oninput="rodarCalculoPF()"></div>
-                                </div>
-                                <div class="g2">
-                                    <div class="fg"><label>Base INSS (Outras Empresas):</label><input type="text" id="pf_base_ext" class="moeda hl-ajuste" value="0,00" oninput="rodarCalculoPF()"></div>
-                                    <div class="fg"><label>Bruto (Mês Corrente):</label><input type="text" id="pf_bruto_ant" class="moeda" value="0,00" oninput="rodarCalculoPF()"></div>
-                                </div>
-                            </div>
-                        </div>
+/* ---------- calendário ---------- */
+function pascoa(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
+const dk=d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+function feriados(y,extras){const s=new Set(['01/01','21/04','01/05','07/09','12/10','02/11','15/11','20/11','25/12']);const p=pascoa(y);[-48,-47,-2,60].forEach(n=>{const x=new Date(p);x.setDate(x.getDate()+n);s.add(dk(x));});(extras||[]).forEach(e=>{e=String(e).trim();if(/^\d{2}\/\d{2}$/.test(e))s.add(e);});return s;}
+function util(d,ex){const w=d.getDay();return w!==0&&w!==6&&!feriados(d.getFullYear(),ex).has(dk(d));}
+function ajustar(d,regra,ex){const x=new Date(d);const st=regra==='prorroga'?1:-1;if(regra==='nominal')return x;while(!util(x,ex))x.setDate(x.getDate()+st);return x;}
+function vencDia(ano,mes,dia,regra,ex){const ult=new Date(ano,mes+1,0).getDate();return ajustar(new Date(ano,mes,Math.min(dia,ult)),regra,ex);}
+function nUtil(ano,mes,n,ex){const d=new Date(ano,mes,1);let c=0;while(true){if(util(d,ex)){c++;if(c===n)return new Date(d);}d.setDate(d.getDate()+1);}}
+function vencApos(fg,dia,regra,ex){if(!fg)return null;const d=new Date(fg+'T12:00:00');if(isNaN(d))return null;return vencDia(d.getFullYear(),d.getMonth()+1,dia,regra,ex);}
 
-                        <div>
-                            <h4 class="sec-title">2. Lançamentos do Recibo</h4>
-                            <div class="g2" style="margin-top: 16px; margin-bottom: 36px;">
-                                <div class="fg">
-                                    <label>Valor Bruto do Recibo (R$):</label>
-                                    <input type="text" id="pf_bruto_atual" class="moeda hl-bruto" value="0,00" oninput="rodarCalculoPF()">
-                                </div>
-                                <div class="g2">
-                                    <div class="fg"><label>IRRF Acumulado (R$):</label><input type="text" id="pf_irrf_ant" class="moeda" value="0,00" oninput="rodarCalculoPF()"></div>
-                                    <div class="fg">
-                                        <label>Plano Previdenciário:</label>
-                                        <select id="pf_perfil" onchange="rodarCalculoPF()">
-                                            <option value="11">Simplificado (11%)</option>
-                                            <option value="20">Padrão (20%)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+/* ---------- documentos ---------- */
+function limpaDoc(s){return String(s||'').toUpperCase().replace(/[^0-9A-Z]/g,'');}
+function cnpjValido(c){c=limpaDoc(c);if(!/^[0-9A-Z]{12}\d{2}$/.test(c)||/^(.)\1{13}$/.test(c))return false;const v=ch=>ch.charCodeAt(0)-48;const dv=(s,w)=>{let t=0;for(let i=0;i<s.length;i++)t+=v(s[i])*w[i];const r=t%11;return r<2?0:11-r;};const w1=[5,4,3,2,9,8,7,6,5,4,3,2],w2=[6,5,4,3,2,9,8,7,6,5,4,3,2];const d1=dv(c.slice(0,12),w1),d2=dv(c.slice(0,12)+d1,w2);return c.slice(12)===`${d1}${d2}`;}
+function cpfValido(c){c=String(c||'').replace(/\D/g,'');if(c.length!==11||/^(\d)\1{10}$/.test(c))return false;for(let j=9;j<11;j++){let t=0;for(let i=0;i<j;i++)t+=+c[i]*(j+1-i);let r=(t*10)%11;if(r===10)r=0;if(r!==+c[j])return false;}return true;}
+function fmtCNPJ(c){c=limpaDoc(c);return c.length===14?`${c.slice(0,2)}.${c.slice(2,5)}.${c.slice(5,8)}/${c.slice(8,12)}-${c.slice(12)}`:c;}
+function fmtCPF(c){c=String(c||'').replace(/\D/g,'');return c.length===11?`${c.slice(0,3)}.${c.slice(3,6)}.${c.slice(6,9)}-${c.slice(9)}`:c;}
+const UFS={11:'RO',12:'AC',13:'AM',14:'RR',15:'PA',16:'AP',17:'TO',21:'MA',22:'PI',23:'CE',24:'RN',25:'PB',26:'PE',27:'AL',28:'SE',29:'BA',31:'MG',32:'ES',33:'RJ',35:'SP',41:'PR',42:'SC',43:'RS',50:'MS',51:'MT',52:'GO',53:'DF'};
+const MODS={'55':'NF-e','65':'NFC-e','57':'CT-e','58':'MDF-e','67':'CT-e OS','62':'NFCom'};
+function chaveInfo(k){k=limpaDoc(k);const o={ok:false,k,erros:[]};if(k.length!==44){o.erros.push(`Chave com ${k.length} posições (esperado 44).`);return o;}
+ const body=k.slice(0,43);let t=0,w=2;for(let i=42;i>=0;i--){t+=(body.charCodeAt(i)-48)*w;w=w===9?2:w+1;}const r=t%11;const dv=r<2?0:11-r;
+ o.dvCalc=dv;o.dvOk=String(dv)===k[43];if(!o.dvOk)o.erros.push(`Dígito verificador inválido (calculado ${dv}, informado ${k[43]}).`);
+ o.uf=UFS[+k.slice(0,2)]||'??';o.aamm=`${k.slice(4,6)}/20${k.slice(2,4)}`;o.cnpj=k.slice(6,20);o.cnpjOk=cnpjValido(o.cnpj)||cpfValido(o.cnpj.slice(3));o.mod=k.slice(20,22);o.modN=MODS[o.mod]||'Modelo '+o.mod;o.serie=+k.slice(22,25);o.nNF=+k.slice(25,34);o.tpEmis=k[34];o.cNF=k.slice(35,43);
+ if(o.uf==='??')o.erros.push('Código de UF inexistente.');if(!o.cnpjOk)o.erros.push('CNPJ/CPF do emitente na chave com DV inválido.');o.ok=!o.erros.length;return o;}
 
-                            <div class="g4">
-                                <div class="col" style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px dashed var(--border);">
-                                    <div class="fg"><label>Base Patronal (CPP):</label><input type="text" id="pf_base_patr" readonly style="background: transparent;"></div>
-                                    <div class="fg"><label>Custo Patronal Empresa (20%):</label><input type="text" id="pf_inss_patr" readonly style="background: transparent; color: var(--warning); font-weight: 800;"></div>
-                                </div>
-                                <div class="col">
-                                    <div class="fg"><label>Base INSS (Teto):</label><input type="text" id="pf_base_trab" readonly></div>
-                                    <div class="fg"><label>INSS Retido (Segurado):</label><input type="text" id="pf_inss_trab" readonly></div>
-                                </div>
-                                <div class="col">
-                                    <div class="fg"><label>Base I.R.:</label><input type="text" id="pf_base_irrf" readonly></div>
-                                    <div class="fg"><label>IRRF no Mês:</label><input type="text" id="pf_irrf" readonly></div>
-                                </div>
-                                <div class="col mt-auto">
-                                    <div class="fg"><label>Total Descontos:</label><input type="text" id="pf_debitos" class="hl-err" readonly></div>
-                                    <div class="fg"><label>Líquido a Pagar (R$):</label><input type="text" id="pf_liquido" class="hl-ok" readonly></div>
-                                </div>
-                            </div>
-                        </div>
+/* ---------- retenções PJ ---------- */
+function calcPJ(p){const L=[],A=[];const tol=p.tol??0.05;
+ const base=Math.max(0,r2(p.bruto-(p.desc||0)));const simp=p.regime!=='NORMAL',mei=p.regime==='MEI';
+ const add=(id,trib,b,aliq,v,cod,obs,venc,info)=>L.push({id,trib,base:r2(b),aliq,valor:r2(v),cod,obs,venc,info:!!info});
+ // IR
+ let ir=0,irObs='';
+ if(simp)irObs=mei?'MEI – sem retenção':'Simples Nacional – dispensado (IN SRF 765/2007)';
+ else if(p.limIR)irObs='Suspenso por liminar/isenção – arquivar decisão';
+ else if(!p.ir)irObs='Natureza sem retenção de IR';
+ else{ir=base*p.ir/100;if(ir>0&&r2(ir)<=LEG.min){irObs='Dispensada: valor ≤ R$ 10,00';ir=0;}}
+ add('ir','IRRF',base,p.ir,ir,`DARF ${p.dar||'1708'} · R-4020`,irObs,'pag');
+ // CSRF
+ let pis=0,cof=0,csl=0,cObs='';
+ if(simp)cObs='Dispensado – optante Simples (Lei 10.833/2003, art. 32)';
+ else if(p.limCSRF)cObs='Suspenso por liminar/isenção';
+ else if(!p.csrf)cObs='Natureza fora do art. 30 da Lei 10.833/2003';
+ else{pis=base*.0065;cof=base*.03;csl=base*.01;if(r2(pis+cof+csl)<=LEG.min){cObs='Dispensada: soma ≤ R$ 10,00';pis=cof=csl=0;}}
+ add('pis','PIS',base,.65,pis,'DARF 5952 · R-4020',cObs,'pag');add('cof','COFINS',base,3,cof,'DARF 5952 · R-4020','','pag');add('csl','CSLL',base,1,csl,'DARF 5952 · R-4020','','pag');
+ // INSS
+ let inss=0,iObs='',bI=0,aI=0;
+ if(p.inss!=='0'){
+  aI=p.inss==='custom'?p.inssAliq:+p.inss;if(p.inss==='11'||p.inss==='custom')aI+=+(p.adic||0);
+  bI=Math.max(0,base-(p.inssDed||0))*(p.inssBase/100);
+  if(mei){iObs='MEI – não há retenção de 11%';aI=0;}
+  else if(simp&&!p.anexoIV){iObs='Simples fora do Anexo IV – sem retenção (LC 123, art. 18, §5º-C)';}
+  else if(p.limINSS)iObs='Suspenso por liminar';
+  else if(p.inssDisp)iObs='Hipótese de dispensa declarada – arquivar declaração do prestador';
+  else{inss=bI*aI/100;if(inss>0&&r2(inss)<LEG.min){iObs='Dispensada: valor < R$ 10,00';inss=0;}}
+ }else iObs='Sem cessão de mão de obra/empreitada';
+ add('inss','INSS retido',bI,aI,inss,'DCTFWeb · R-2010',iObs,'emi');
+ if(mei&&p.mei18b)add('cpp','CPP 20% (encargo tomador)',base,20,base*.2,'DCTFWeb · eSocial','LC 123, art. 18-B – não desconta do MEI','emi',true);
+ // ISS
+ let iss=0,sObs='';
+ if(p.issRet){if(mei){sObs='MEI recolhe ISS fixo no DAS-MEI – não reter';}else iss=base*p.iss/100;}else sObs='Recolhido pelo prestador – conferir local de incidência (LC 116, art. 3º)';
+ add('iss','ISSQN',base,p.issRet&&!mei?p.iss:0,iss,'Guia municipal',sObs,'emi');
+ if(p.issRet&&!simp&&(p.iss<2||p.iss>5))A.push(['wa',`Alíquota de ISS ${p.iss.toFixed(2).replace('.',',')}% fora da faixa 2%–5% (LC 116/2003, art. 8º-A e art. 8º, II).`]);
+ if(p.issRet&&simp&&!mei&&p.iss>5)A.push(['wa','Simples: a alíquota de ISS retida deve ser a informada no documento (faixa do Anexo III/IV/V), limitada a 5%.']);
+ if(p.issRet&&simp&&!mei&&p.iss>0)A.push(['in','Simples: conferir se a alíquota de ISS está destacada na NFS-e (LC 123, art. 21, §4º).']);
+ // IBS/CBS teste
+ if(p.ibscbs&&!simp){add('cbs','CBS (teste 2026)',base,LEG.rt.cbs,base*LEG.rt.cbs/100,'Destaque informativo','Não retido; recolhimento dispensado em 2026','',true);add('ibs','IBS (teste 2026)',base,LEG.rt.ibsUF,base*LEG.rt.ibsUF/100,'Destaque informativo','Não retido; recolhimento dispensado em 2026','',true);}
+ const tot=r2(L.filter(x=>!x.info).reduce((s,x)=>s+x.valor,0));const liq=r2(base-tot);
+ if(simp)A.push(['ok',mei?'MEI: sem retenções federais, INSS e ISS (salvo CPP 20% do art. 18-B).':'Simples Nacional: sem IR/CSRF. Exija a declaração de optante (IN SRF 765/2007) e confira a opção no portal.']);
+ if(!simp&&p.csrf&&!p.limCSRF&&pis===0&&base>0)A.push(['in','CSRF dispensada por valor ≤ R$ 10,00 – atenção a pagamentos fracionados ao mesmo fornecedor no mês.']);
+ if(p.limIR||p.limCSRF||p.limINSS)A.push(['wa','Retenção suspensa por decisão judicial/isenção: anexar cópia e conferir validade antes de cada pagamento.']);
+ if(p.liqInf>0){const d=r2(p.liqInf-liq);if(Math.abs(d)>tol)A.push(['er',`Líquido informado na NF (R$ ${fmtR(p.liqInf)}) diverge do calculado em R$ ${fmtR(d)}. Solicitar carta de correção/substituição ou ajustar o pagamento.`]);else A.push(['ok','Líquido informado confere com o calculado.']);}
+ if(!p.emi||!p.pag)A.push(['in','Informe emissão e pagamento para calcular os vencimentos (INSS pela emissão; IR/CSRF pelo pagamento).']);
+ return{L,A,base,tot,liq,ir:r2(ir),pis:r2(pis),cof:r2(cof),csl:r2(csl),inss:r2(inss),iss:r2(iss)};}
 
-                        <!-- Área de Assinatura (Aparece apenas ao gerar o PDF/Impressão) -->
-                        <div class="area-assinatura">
-                            <div class="linha-assinatura"></div>
-                            <p style="font-weight: 800; font-size: 15px; color: #000;">Assinatura do Prestador Autônomo</p>
-                            <p style="font-size: 12px; color: #666; margin-top: 4px;">Reconheço o recebimento do valor líquido e concordo com os descontos legais aplicados acima.</p>
-                        </div>
+/* ---------- RPA ---------- */
+const CAT={'701':{n:'Contribuinte individual – autônomo em geral',fI:1,fR:1,sest:0},'711':{n:'Transportador autônomo de passageiros',fI:.2,fR:.6,sest:.025},'712':{n:'Transportador autônomo de carga',fI:.2,fR:.1,sest:.025},'741':{n:'MEI – serviços do art. 18-B (LC 123)',fI:1,fR:0,sest:0,mei:1}};
+function calcRPA(p){const A=[];const k=CAT[p.cat||'701'];const al=k.mei?0:(p.contr==='20'?.2:.11);
+ const baseAt=r2(p.bruto*k.fI),baseAnt=r2(p.ant*k.fI);
+ const dispExt=Math.max(0,LEG.teto-p.ext);const bAnt=Math.min(baseAnt,dispExt);const inssAnt=r2(bAnt*al);
+ const disp=Math.max(0,dispExt-bAnt);const bAt=r2(Math.min(baseAt,disp));const inss=r2(bAt*al);
+ const sest=r2(baseAt*k.sest);
+ const rend=r2((p.ant+p.bruto)*k.fR);const irm=calcIRPF({rend,inss:inssAnt+inss,dep:p.dep,pensao:p.pens});
+ let ir=k.mei?0:r2(Math.max(0,irm.ir-p.irAnt)),irObs='';if(ir>0&&ir<=LEG.min){irObs='Dispensada: ≤ R$ 10,00 (acumular no mês)';ir=0;}
+ const iss=r2(p.bruto*p.iss/100);const patr=p.contr==='20'&&!k.mei?0:r2(baseAt*.2);const tot=r2(inss+sest+ir+iss+(p.out||0));
+ let indMV='';if(p.ext>0){indMV=p.ext>=LEG.teto?'3':(p.ext+baseAnt+baseAt>LEG.teto?'2':'1');}
+ if(k.mei){A.push(['wa','MEI: não há desconto do segurado nem IRRF; a Unimed recolhe a CPP de 20% (LC 123, art. 18-B) e informa no eSocial com categoria 741. Exigir NFS-e do MEI.']);}
+ if(p.ext>=LEG.teto)A.push(['wa','Trabalhador já atingiu o teto em outras empresas (indMV = 3): não descontar INSS e arquivar a declaração/contracheque da competência.']);
+ else if(p.ext>0)A.push(['in',`Múltiplos vínculos: informar no S-1200 o grupo infoMV com indMV = ${indMV} e remunOutrEmpr (CNPJ da outra fonte, categoria e valor). Arquivar a declaração mensal do trabalhador.`]);
+ if(bAt<baseAt&&p.bruto>0)A.push(['in',`Base do INSS limitada ao teto disponível (R$ ${fmtR(bAt)}).`]);
+ if(k.fI<1)A.push(['in',`Transportador autônomo: base de contribuição = 20% do frete (R$ ${fmtR(baseAt)}); SEST/SENAT 2,5% sobre essa base; IR sobre ${k.fR*100}% do valor (RIR/2018, art. 685).`]);
+ if(rend<=LEG.red.l1&&irm.tab>0&&!k.mei)A.push(['ok','IRRF zerado pela redução mensal da Lei 15.270/2025 (rendimento tributável ≤ R$ 5.000,00).']);
+ else if(rend<=LEG.red.l2&&irm.red>0)A.push(['in',`Redução da Lei 15.270/2025 aplicada: R$ ${fmtR(irm.red)}.`]);
+ if(p.ant>0&&p.irAnt===0&&irm.ir>0)A.push(['wa','Há pagamento anterior no mês sem IRRF informado: confirme o IRRF já retido para não reter em duplicidade.']);
+ return{k,baseAt,inssAnt,bAt,inss,sest,rend,irm,ir,irObs,iss,patr,tot,liq:r2(p.bruto-tot),indMV,A};}
+/* ---------- reforma ---------- */
+function simReforma(p){const rows=[];const fr=1-p.red/100;
+ const plan=[[2026,1,0,'teste'],[2027,1,0,''],[2028,1,0,''],[2029,.9,.1,''],[2030,.8,.2,''],[2031,.7,.3,''],[2032,.6,.4,''],[2033,0,1,'']];
+ for(const [y,loc,ibsF,obs] of plan){let pc=0,cbs=0,ibs=0,inf=0;const vloc=p.v*p.loc/100*loc;
+  if(y===2026){pc=p.v*p.pc/100;inf=p.v*(LEG.rt.cbs+LEG.rt.ibsUF)/100;}
+  else{cbs=p.v*Math.max(0,p.cbs-(y<=2028?0.1:0))/100*fr;ibs=y<=2028?p.v*0.1/100*fr:p.v*p.ibs/100*ibsF*fr;}
+  const tot=pc+vloc+cbs+ibs;rows.push({y,pc:r2(pc),loc:r2(vloc),cbs:r2(cbs),ibs:r2(ibs),inf:r2(inf),tot:r2(tot),carga:p.v?tot/p.v*100:0});}
+ return rows;}
+function fmtR(v){return(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+if(typeof module!=='undefined')module.exports={LEG,CAT,calcIRPF,calcPJ,calcRPA,cnpjValido,cpfValido,chaveInfo,vencDia,vencApos,nUtil,simReforma,PRESETS,sugerePreset,feriados};
+</script>
 
-                    </div>
-                    <div class="b-bar">
-                        <button class="btn-recalc" onclick="window.print()" style="margin-right: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);"><i class="fa-solid fa-print"></i> Imprimir / Salvar PDF</button>
-                        <button class="btn-recalc primary" onclick="rodarCalculoPF()">Processar Recibo RPA Completo</button>
-                    </div>
-                </div>
-            </div>
+<!-- ================= INTERFACE ================= -->
+<script>
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const AG_DEF=[
+ {n:'EFD-Reinf (R-2010 · R-4010 · R-4020)',t:'dia',d:15,r:'antecipa'},
+ {n:'eSocial periódicos (S-1200 · S-1210 · S-1299)',t:'dia',d:15,r:'antecipa'},
+ {n:'DCTFWeb – transmissão',t:'dia',d:15,r:'antecipa'},
+ {n:'DARF INSS (retido + patronal) via DCTFWeb',t:'dia',d:20,r:'antecipa'},
+ {n:'DARF IRRF (1708 · 8045 · 3280 · 0588)',t:'dia',d:20,r:'antecipa'},
+ {n:'DARF CSRF retido (5952)',t:'dia',d:20,r:'antecipa'},
+ {n:'DAS – Simples Nacional',t:'dia',d:20,r:'prorroga'},
+ {n:'PIS/COFINS próprios',t:'dia',d:25,r:'antecipa'},
+ {n:'ISSQN retido (guia municipal)',t:'dia',d:25,r:'antecipa'},
+ {n:'EFD-Contribuições (comp. M-2)',t:'util',d:10,r:'nominal'}];
+const CFG_DEF={cnpj:'',cnpjs:'',uf:'MT',mun:'Tangará da Serra',tol:0.05,iss:2,fer:'',agenda:AG_DEF};
+let CFG=Object.assign({},CFG_DEF,LS.get('afp_cfg',{}));
+let HIST=LS.get('afp_hist',[]);
+let nfeLote=[],nsLote=[],ultimoPJ=null,ultimoRPA=null;
+const fer=()=>String(CFG.fer||'').split(',');
+const m=id=>{const el=$(id);if(!el||!el.value)return 0;const s=el.value.replace(/\D/g,'');return s?parseInt(s,10)/100:0;};
+const pc=id=>{const el=$(id);if(!el)return 0;const n=parseFloat(String(el.value).replace(/\./g,'').replace(',','.'));return isNaN(n)?0:n;};
+const R=v=>'R$ '+fmtR(v);
+const setM=(id,v)=>{$(id).value=fmtR(v);};
+const fd=d=>d?d.toLocaleDateString('pt-BR'):'—';
+const fdi=s=>s?s.slice(0,10).split('-').reverse().join('/'):'—';
+const hoje=()=>{const d=new Date();d.setHours(0,0,0,0);return d;};
+const iso=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:'';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICO={ok:'circle-check',wa:'triangle-exclamation',er:'circle-xmark',in:'circle-info'};
+const alertas=A=>A.map(([t,msg])=>`<div class="al ${t}"><i class="fa-solid fa-${ICO[t]}"></i><div>${msg}</div></div>`).join('');
+const stOf=A=>A.some(a=>a[0]==='er')?'ERRO':A.some(a=>a[0]==='wa')?'ALERTA':'OK';
+const stBd=s=>`<span class="bd ${s==='OK'?'ok':s==='ALERTA'?'wa':'er'}">${s}</span>`;
+const tomadores=()=>[CFG.cnpj,...String(CFG.cnpjs||'').split(',')].map(limpaDoc).filter(Boolean);
 
-        </div>
+function mascMoeda(e){let v=e.target.value.replace(/\D/g,'');if(!v){e.target.value='';return;}e.target.value=(parseInt(v,10)/100).toFixed(2).replace('.',',').replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.');}
+function mascPct(e){e.target.value=e.target.value.replace(/[^\d,]/g,'').replace(/(,.*?),/g,'$1');}
+function mascCNPJ(e){const c=limpaDoc(e.target.value).slice(0,14);let o=c;if(c.length>2)o=c.slice(0,2)+'.'+c.slice(2);if(c.length>5)o=o.slice(0,6)+'.'+c.slice(5);if(c.length>8)o=o.slice(0,10)+'/'+c.slice(8);if(c.length>12)o=o.slice(0,15)+'-'+c.slice(12);e.target.value=o;}
+document.addEventListener('input',e=>{if(e.target.classList.contains('moeda'))mascMoeda(e);else if(e.target.classList.contains('pct'))mascPct(e);},true);
+['cnpj_in','pj_cnpj','cf_cnpj'].forEach(id=>$(id).addEventListener('input',mascCNPJ));
+$('rp_cpf').addEventListener('input',e=>{const c=e.target.value.replace(/\D/g,'').slice(0,11);e.target.value=c.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');});
 
-        <div class="footer">
-            © 2026 Plataforma de Auditoria Fiscal PRO <br>
-            <span>Desenvolvido por Manoel Santana </span>
-        </div>
-    </div>
+/* ---------- navegação ---------- */
+const NOMES={painel:'Painel & Agenda',cnpj:'Consulta CNPJ',pj:'Retenções PJ',rpa:'RPA Autônomo',nfe:'Conferência NF-e',nfse:'Conferência NFS-e',ferr:'Validadores & Checklist',reforma:'Reforma Tributária',hist:'Histórico & Métricas',cfg:'Configurações'};
+function aba(v){document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.v===v));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='view-'+v));$('txt-mod').textContent=NOMES[v];LS.set('afp_aba',v);
+ ({painel:renderPainel,pj:calcPJUI,rpa:calcRPAUI,reforma:calcRF,hist:renderHist,cfg:renderCfg,cnpj:renderCache}[v]||(()=>{}))();}
+document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>aba(n.dataset.v));
 
-    <script>
-        const TETO_INSS = 8475.55;
-        const TAB_IRRF = [
-            { lim: 2428.80, aliq: 0, ded: 0 }, 
-            { lim: 2826.65, aliq: 0.075, ded: 182.16 },
-            { lim: 3751.05, aliq: 0.15, ded: 394.16 }, 
-            { lim: 4664.68, aliq: 0.225, ded: 675.49 },
-            { lim: Infinity, aliq: 0.275, ded: 908.73 }
-        ];
+/* ---------- PAINEL ---------- */
+function agendaDatas(ano,mes){return(CFG.agenda||AG_DEF).map(a=>{let d;if(a.t==='util'){d=nUtil(ano,mes,+a.d,fer());}else d=vencDia(ano,mes,+a.d,a.r,fer());return{...a,dt:d};}).sort((x,y)=>x.dt-y.dt);}
+function renderPainel(){const mv=$('ag_mes').value||iso(hoje()).slice(0,7);$('ag_mes').value=mv;const[y,mo]=mv.split('-').map(Number);const h=hoje();
+ const cmp=new Date(y,mo-2,1);$('ag_tab').innerHTML=`<tr><th>Obrigação (competência ${String(cmp.getMonth()+1).padStart(2,'0')}/${cmp.getFullYear()})</th><th>Vencimento</th><th>Regra</th><th class="n">Prazo</th></tr>`+
+ agendaDatas(y,mo-1).map(a=>{const dias=Math.round((a.dt-h)/864e5);const b=dias<0?'<span class="bd mu">vencido</span>':dias===0?'<span class="bd er">hoje</span>':dias<=3?`<span class="bd wa">${dias} d</span>`:`<span class="bd ok">${dias} d</span>`;
+  return`<tr><td class="b h">${esc(a.n)}</td><td>${a.dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})}</td><td class="mu">${a.t==='util'?a.d+'º dia útil':a.r==='prorroga'?'prorroga':a.r==='nominal'?'nominal':'antecipa'}</td><td class="n">${b}</td></tr>`;}).join('');
+ const mesAt=iso(h).slice(0,7);const H=HIST.filter(x=>(x.data||'').slice(0,7)===mesAt);const s=k=>H.reduce((t,x)=>t+(+x[k]||0),0);
+ const ret=s('ir')+s('pis')+s('cof')+s('csl')+s('inss')+s('iss');
+ $('kpis').innerHTML=[['Documentos no mês',H.length,`${H.filter(x=>x.st!=='OK').length} com alerta/erro`],['Valor bruto conferido',R(s('bruto')),'mês corrente'],['Retenções apuradas',R(ret),`IR ${R(s('ir'))} · CSRF ${R(s('pis')+s('cof')+s('csl'))}`],['INSS / ISS retidos',R(s('inss')+s('iss')),`INSS ${R(s('inss'))} · ISS ${R(s('iss'))}`]].map(k=>`<div class="kpi"><span>${k[0]}</span><strong>${k[1]}</strong><small>${k[2]}</small></div>`).join('');
+ const g={};HIST.forEach(x=>(x.venc||[]).forEach(v=>{if(!v.dt||v.valor<=0)return;const k=v.trib+'|'+v.dt;g[k]=g[k]||{trib:v.trib,dt:v.dt,valor:0,n:0};g[k].valor+=v.valor;g[k].n++;}));
+ const lst=Object.values(g).filter(v=>new Date(v.dt+'T12:00')>=new Date(h.getFullYear(),h.getMonth()-1,1)).sort((a,b)=>a.dt.localeCompare(b.dt));
+ $('ag_rec').innerHTML=`<tr><th>Tributo</th><th>Vencimento</th><th class="n">Docs</th><th class="n">Valor</th></tr>`+(lst.length?lst.map(v=>{const d=new Date(v.dt+'T12:00');const late=d<h;return`<tr><td class="b">${esc(v.trib)}</td><td class="${late?'er-t b':''}">${fdi(v.dt)}${late?' (vencido)':''}</td><td class="n">${v.n}</td><td class="n b">${R(v.valor)}</td></tr>`;}).join(''):'<tr><td colspan="4" class="mu">Nenhum registro com vencimento. Registre cálculos nas abas Retenções PJ, RPA e NFS-e.</td></tr>');}
+$('ag_mes').addEventListener('change',renderPainel);
 
-        function alternarAba(aba) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-cnpj').style.display = 'none';
-            document.getElementById('view-avulso').style.display = 'none';
-            document.getElementById('view-rpa').style.display = 'none';
+/* ---------- CNPJ ---------- */
+let CACHE=LS.get('afp_cnpj',{});
+async function buscaAPI(c){const urls=[`https://brasilapi.com.br/api/cnpj/v1/${c}`,`https://minhareceita.org/${c}`];let err;for(const u of urls){try{const r=await fetch(u);if(r.ok)return await r.json();err=new Error(r.status===404?'CNPJ não localizado na base pública':'HTTP '+r.status);}catch(e){err=e;}}throw err;}
+async function consultarCNPJ(){const c=limpaDoc($('cnpj_in').value);const box=$('cnpj_res');
+ if(c.length!==14){box.innerHTML=alertas([['er','Informe um CNPJ com 14 posições.']]);return;}
+ if(!cnpjValido(c)){box.innerHTML=alertas([['er','CNPJ com dígito verificador inválido (validação alfanumérica – IN RFB 2.229/2024).']]);return;}
+ const btn=$('cnpj_btn');btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Consultando...';btn.disabled=true;
+ try{const d=await buscaAPI(c);d._ts=Date.now();CACHE[c]=d;const ks=Object.keys(CACHE).sort((a,b)=>CACHE[b]._ts-CACHE[a]._ts);ks.slice(30).forEach(k=>delete CACHE[k]);LS.set('afp_cnpj',CACHE);mostrarCNPJ(c,d);}
+ catch(e){box.innerHTML=alertas([['er',`Falha na consulta (${esc(e.message)}). CNPJ alfanumérico recém-emitido pode ainda não constar nas bases públicas. Consulte o comprovante no site da Receita e o portal do Simples Nacional, e defina o regime manualmente na aba Retenções PJ.`]])+`<div class="row" style="margin-top:8px"><button class="btn pr" onclick="enviarPJ('${c}','NORMAL')">Abrir na calculadora como Regime Normal</button></div>`;}
+ finally{btn.innerHTML='Analisar empresa';btn.disabled=false;renderCache();}}
+$('cnpj_btn').onclick=consultarCNPJ;$('cnpj_in').addEventListener('keydown',e=>{if(e.key==='Enter')consultarCNPJ();});
+function regimeDe(d){if(d.opcao_pelo_mei===true)return'MEI';if(d.opcao_pelo_simples===true)return'SIMPLES';if(d.opcao_pelo_simples===false)return'NORMAL';return null;}
+function mostrarCNPJ(c,d){const reg=regimeDe(d);const sit=(d.descricao_situacao_cadastral||d.situacao_cadastral||'').toString().toUpperCase();const ativa=sit.includes('ATIVA');const sug=sugerePreset(d.cnae_fiscal);const A=[];
+ if(!ativa)A.push(['er',`Situação cadastral <b>${esc(sit||'não informada')}</b>. Documento de empresa inapta/baixada/suspensa pode ser considerado inidôneo – não pagar sem análise.`]);
+ if(reg==='MEI')A.push(['ok','MEI: sem retenções. Verificar art. 18-B (CPP 20%) para hidráulica, elétrica, pintura, alvenaria, carpintaria e manutenção de veículos.']);
+ else if(reg==='SIMPLES')A.push(['ok',`Optante pelo Simples Nacional desde ${fdi(d.data_opcao_pelo_simples)}. Sem IR/CSRF; INSS só no Anexo IV.`]);
+ else if(reg==='NORMAL')A.push(['wa',`Regime Normal${d.data_exclusao_do_simples?` (excluído do Simples em ${fdi(d.data_exclusao_do_simples)})`:''}: aplicar retenções conforme a natureza do serviço.`]);
+ else A.push(['wa','Base pública não informou a opção pelo Simples: confirmar no portal do Simples Nacional antes de calcular.']);
+ if(d.data_exclusao_do_simples&&reg==='SIMPLES')A.push(['wa',`Há data de exclusão do Simples (${fdi(d.data_exclusao_do_simples)}) – conferir efeitos na data de emissão.`]);
+ if(d.uf&&CFG.uf&&d.uf!==CFG.uf)A.push(['in',`Fornecedor de outra UF (${esc(d.uf)}): em NF-e, conferir CFOP 6.xxx e DIFAL; em serviço, conferir local de incidência do ISS.`]);
+ const sec=(d.cnaes_secundarios||[]).filter(x=>x.codigo).map(x=>`<tr><td class="mono">${x.codigo}</td><td>${esc(x.descricao)}</td></tr>`).join('');
+ $('cnpj_res').innerHTML=`<div class="panel"><div class="p-head"><i class="fa-solid fa-clipboard-check"></i> Diagnóstico cadastral e tributário<span class="sp"></span><span class="bd ${ativa?'ok':'er'}">${esc(sit||'?')}</span></div><div class="p-body">
+ <div><div style="font-size:17px;font-weight:800" class="h">${esc(d.razao_social)}</div><div class="mu">CNPJ <b class="h mono">${fmtCNPJ(c)}</b> · Fantasia: ${esc(d.nome_fantasia||'—')} · ${esc(d.municipio||'')}/${esc(d.uf||'')}</div></div>
+ <div class="g g6"><div class="kpi"><span>Regime</span><strong style="font-size:14px">${reg==='MEI'?'MEI':reg==='SIMPLES'?'Simples Nacional':reg==='NORMAL'?'Regime Normal':'Indefinido'}</strong></div><div class="kpi"><span>Abertura</span><strong style="font-size:14px">${fdi(d.data_inicio_atividade)}</strong></div><div class="kpi"><span>Porte</span><strong style="font-size:14px">${esc(d.porte||d.descricao_porte||'—')}</strong></div><div class="kpi s3"><span>Natureza jurídica</span><strong style="font-size:13px">${esc(d.natureza_juridica||'—')}</strong></div>
+ <div class="kpi sall"><span>CNAE principal</span><strong style="font-size:13px">${esc(d.cnae_fiscal||'')} – ${esc(d.cnae_fiscal_descricao||'')}</strong><small>${sug?'Natureza sugerida: '+esc(PRESETS[sug].n):'Sem sugestão automática – escolher a natureza conforme o serviço efetivamente prestado.'}</small></div></div>
+ <div class="alerts">${alertas(A)}</div>${sec?`<details><summary>CNAEs secundários (${(d.cnaes_secundarios||[]).length})</summary><div class="tw" style="margin-top:6px;max-height:220px"><table class="t">${sec}</table></div></details>`:''}
+ </div><div class="bar"><button class="btn pr" onclick="enviarPJ('${c}')"><i class="fa-solid fa-arrow-right"></i> Calcular retenções</button></div></div>`;}
+function renderCache(){const ks=Object.keys(CACHE).sort((a,b)=>CACHE[b]._ts-CACHE[a]._ts);$('cnpj_cache').innerHTML=`<tr><th>CNPJ</th><th>Razão social</th><th>Regime</th><th>Situação</th><th>Consultado</th><th></th></tr>`+(ks.length?ks.map(k=>{const d=CACHE[k];const r=regimeDe(d);return`<tr><td class="mono">${fmtCNPJ(k)}</td><td>${esc(d.razao_social)}</td><td>${r||'?'}</td><td>${esc(d.descricao_situacao_cadastral||'')}</td><td class="mu">${new Date(d._ts).toLocaleString('pt-BR')}</td><td><button class="btn sm" onclick="$('cnpj_in').value='${fmtCNPJ(k)}';mostrarCNPJ('${k}',CACHE['${k}'])">Abrir</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="mu">Sem consultas.</td></tr>');}
+function limparCache(){CACHE={};LS.set('afp_cnpj',CACHE);renderCache();}
+function enviarPJ(c,regForce){const d=CACHE[c]||{};const reg=regForce||regimeDe(d)||'NORMAL';const sug=sugerePreset(d.cnae_fiscal);$('pj_cnpj').value=fmtCNPJ(c);$('pj_nome').value=d.razao_social||'';$('pj_reg').value=reg;if(sug){$('pj_preset').value=sug;aplicarPreset();}aba('pj');}
 
-            if (aba === 'cnpj') {
-                document.getElementById('nav-cnpj').classList.add('active');
-                document.getElementById('view-cnpj').style.display = 'flex';
-                document.getElementById('txt-modulo-atual').innerText = "Módulo CNPJ & Retenções PJ";
-            } else if (aba === 'avulso') {
-                document.getElementById('nav-avulso').classList.add('active');
-                document.getElementById('view-avulso').style.display = 'flex';
-                document.getElementById('txt-modulo-atual').innerText = "Calculadora Avulsa (Híbrida)";
-                rodarCalculoAvulso();
-            } else {
-                document.getElementById('nav-rpa').classList.add('active');
-                document.getElementById('view-rpa').style.display = 'flex';
-                document.getElementById('txt-modulo-atual').innerText = "Módulo Autônomos (RPA)";
-                rodarCalculoPF();
-            }
-        }
+/* ---------- RETENÇÕES PJ ---------- */
+function fillPresets(id){$(id).innerHTML=Object.entries(PRESETS).map(([k,v])=>`<option value="${k}">${esc(v.n)}</option>`).join('');}
+fillPresets('pj_preset');fillPresets('ns_preset');
+function aplicarPreset(){const p=PRESETS[$('pj_preset').value];$('pj_ir').value=fmtR(p.ir);$('pj_csrf').value=p.csrf?'1':'0';$('pj_inss').value=p.inss;$('pj_inss_base').value=p.base;$('pj_dar').value=p.dar;calcPJUI();}
+$('pj_preset').addEventListener('change',aplicarPreset);
+function lerPJ(){const bs=$('pj_inss_base').value;return{bruto:m('pj_bruto'),desc:m('pj_desc'),regime:$('pj_reg').value,anexoIV:$('pj_anexo4').checked,mei18b:$('pj_mei18b').checked,ir:pc('pj_ir'),csrf:$('pj_csrf').value==='1',
+ inss:$('pj_inss').value,inssAliq:pc('pj_inss_aliq'),inssBase:bs==='custom'?pc('pj_inss_bp'):+bs,inssDed:m('pj_inss_ded'),adic:+$('pj_inss_adic').value,inssDisp:$('pj_inss_disp').checked,
+ limIR:$('pj_lim_ir').checked,limCSRF:$('pj_lim_csrf').checked,limINSS:$('pj_lim_inss').checked,issRet:$('pj_issret').value==='1',iss:pc('pj_iss'),liqInf:m('pj_liqinf'),
+ emi:$('pj_emi').value,pag:$('pj_pag').value,dar:$('pj_dar').value,ibscbs:$('pj_ibscbs').checked,tol:+CFG.tol||0.05};}
+const VREG=()=>Object.fromEntries((CFG.agenda||AG_DEF).map(a=>[a.n,a]));
+function vencTrib(id,emi,pag){const ag=CFG.agenda||AG_DEF;const f=k=>ag.find(a=>a.n.includes(k))||{d:20,r:'antecipa'};
+ const map={ir:['IRRF',pag],pis:['CSRF',pag],cof:['CSRF',pag],csl:['CSRF',pag],inss:['INSS',emi],cpp:['INSS',emi],iss:['ISSQN',emi]};const x=map[id];if(!x)return null;const a=f(x[0]);return vencApos(x[1],+a.d,a.r,fer());}
+function calcPJUI(){const p=lerPJ();const reg=p.regime;
+ document.querySelectorAll('.pj-simp').forEach(e=>e.style.display=reg==='SIMPLES'?'':'none');document.querySelectorAll('.pj-mei').forEach(e=>e.style.display=reg==='MEI'?'':'none');
+ $('pj_tag').textContent=reg==='NORMAL'?'Regime Normal':reg==='SIMPLES'?'Simples Nacional':'MEI';$('pj_tag').className='bd '+(reg==='NORMAL'?'in':'ok');
+ const doc=limpaDoc(p.cnpj=$('pj_cnpj').value);const A0=[];if(doc&&doc.length===14&&!cnpjValido(doc))A0.push(['er','CNPJ informado com dígito verificador inválido.']);
+ if(doc&&CACHE[doc]){const d=CACHE[doc];const r=regimeDe(d);if(r&&r!==reg)A0.push(['wa',`Regime selecionado difere da consulta (${r}).`]);}
+ const c=calcPJ(p);c.L.forEach(l=>{const v=vencTrib(l.id,p.emi,p.pag);l.vdt=v?iso(v):'';});ultimoPJ={p,c};
+ $('pj_tab').innerHTML=`<tr><th>Tributo</th><th class="n">Base</th><th class="n">Alíq.</th><th class="n">Valor</th><th>Recolhimento / declaração</th><th>Vencimento</th><th>Observação</th></tr>`+
+  c.L.map(l=>`<tr${l.info?' style="color:var(--mu)"':''}><td class="b">${l.trib}</td><td class="n">${fmtR(l.base)}</td><td class="n">${fmtR(l.aliq)}%</td><td class="n b ${l.valor>0&&!l.info?'er-t':''}">${fmtR(l.valor)}</td><td class="mu">${l.cod}</td><td>${l.valor>0&&l.vdt&&!l.info?fdi(l.vdt):'—'}</td><td class="mu" style="font-size:11px">${l.obs||''}</td></tr>`).join('')+
+  `<tr class="tot"><td>Total retido</td><td class="n">${fmtR(c.base)}</td><td></td><td class="n">${fmtR(c.tot)}</td><td colspan="3">Líquido: ${R(c.liq)}</td></tr>`;
+ $('pj_tot').textContent=R(c.tot);$('pj_liq').textContent=R(c.liq);$('pj_al').innerHTML=alertas([...A0,...c.A]);c.A=[...A0,...c.A];}
+$('view-pj').addEventListener('input',calcPJUI);$('view-pj').addEventListener('change',e=>{if(e.target.id!=='pj_preset')calcPJUI();});
+function limparPJ(){['pj_cnpj','pj_nome','pj_nf'].forEach(i=>$(i).value='');['pj_bruto','pj_desc','pj_liqinf','pj_inss_ded'].forEach(i=>$(i).value='0,00');['pj_lim_ir','pj_lim_csrf','pj_lim_inss','pj_inss_disp','pj_anexo4','pj_mei18b'].forEach(i=>$(i).checked=false);$('pj_iss').value=fmtR(CFG.iss);calcPJUI();}
+function regDe(tipo,doc,nome,nf,bruto,c,venc,A,extra){return Object.assign({id:Date.now()+Math.random().toString(36).slice(2,6),data:iso(hoje()),tipo,doc,nome,nf,bruto:r2(bruto),ir:c.ir||0,pis:c.pis||0,cof:c.cof||0,csl:c.csl||0,inss:c.inss||0,iss:c.iss||0,cbs:c.cbs||0,ibs:c.ibs||0,liq:c.liq||0,st:stOf(A),obs:A.filter(a=>a[0]==='er'||a[0]==='wa').map(a=>a[1].replace(/<[^>]+>/g,'')).join(' | '),venc},extra||{});}
+function salvarHist(){LS.set('afp_hist',HIST);}
+function registrarPJ(){calcPJUI();const{p,c}=ultimoPJ;if(!p.bruto){alert('Informe o valor bruto.');return;}
+ const venc=c.L.filter(l=>!l.info&&l.valor>0).map(l=>({trib:l.id==='ir'?'IRRF '+(p.dar||''):['pis','cof','csl'].includes(l.id)?'CSRF 5952':l.id==='inss'?'INSS retido':'ISSQN',dt:l.vdt,valor:l.valor}));
+ HIST.unshift(regDe('PJ',limpaDoc(p.cnpj),$('pj_nome').value,$('pj_nf').value,p.bruto,c,venc,c.A,{natureza:PRESETS[$('pj_preset').value].n,emi:p.emi,pag:p.pag}));salvarHist();toast('Registrado no histórico.');}
+function imprimirPJ(){calcPJUI();const{p,c}=ultimoPJ;$('print-area').innerHTML=cabRel('Memória de cálculo – Retenções na fonte (PJ)','Tomador: Unimed Vale do Sepotuba'+(CFG.cnpj?' · CNPJ '+fmtCNPJ(CFG.cnpj):''))+`<div>Prestador: <b>${esc($('pj_nome').value)}</b> ${fmtCNPJ($('pj_cnpj').value)} · NF ${esc($('pj_nf').value)} · Emissão ${fdi(p.emi)} · Pagamento ${fdi(p.pag)}</div><div>Regime: ${p.regime} · Natureza: ${esc(PRESETS[$('pj_preset').value].n)}</div>
+ <h2>Cálculo</h2><table><tr><th>Tributo</th><th class="n">Base</th><th class="n">Alíq.</th><th class="n">Valor</th><th>Código</th><th>Vencimento</th><th>Obs.</th></tr>${c.L.map(l=>`<tr><td>${l.trib}</td><td class="n">${fmtR(l.base)}</td><td class="n">${fmtR(l.aliq)}%</td><td class="n">${fmtR(l.valor)}</td><td>${l.cod}</td><td>${l.valor>0&&!l.info?fdi(l.vdt):''}</td><td>${l.obs||''}</td></tr>`).join('')}<tr><td><b>Total retido</b></td><td></td><td></td><td class="n"><b>${fmtR(c.tot)}</b></td><td colspan="3"><b>Líquido a pagar: R$ ${fmtR(c.liq)}</b></td></tr></table>
+ <h2>Observações</h2><ul>${c.A.map(a=>`<li>${a[1]}</li>`).join('')}</ul><div class="ass"><div></div>Conferido por – Setor Fiscal · ${new Date().toLocaleString('pt-BR')}</div>`;window.print();}
 
-        function parseValor(id) {
-            let el = document.getElementById(id);
-            if (!el || !el.value) return 0;
-            let puros = el.value.replace(/\D/g, "");
-            return puros === "" ? 0 : parseInt(puros, 10) / 100;
-        }
+/* ---------- RPA ---------- */
+function lerRPA(){return{bruto:m('rp_bruto'),ant:m('rp_ant'),ext:m('rp_ext'),irAnt:m('rp_irant'),dep:parseInt($('rp_dep').value)||0,pens:m('rp_pens'),iss:pc('rp_iss'),out:m('rp_out'),contr:$('rp_contr').value,pag:$('rp_pag').value,cat:$('rp_cat').value,comp:$('rp_comp').value};}
+const MVTXT={'1':'1 – Unimed desconta sobre sua remuneração (soma não ultrapassa o teto)','2':'2 – Unimed desconta sobre a diferença até o teto','3':'3 – Sem desconto: teto atingido em outra empresa'};
+function rpaVenc(p){const ag=CFG.agenda||AG_DEF,f=k=>ag.find(a=>a.n.includes(k))||{d:20,r:'antecipa'};
+ const comp=p.comp?p.comp+'-01':p.pag;const vI=vencApos(comp,+f('INSS').d,f('INSS').r,fer()),vR=vencApos(p.pag,+f('IRRF').d,f('IRRF').r,fer()),vS=vencApos(p.pag,+f('ISSQN').d,f('ISSQN').r,fer());
+ const vE=vencApos(comp,+f('eSocial').d,f('eSocial').r,fer());return{vI,vR,vS,vE};}
+function calcRPAUI(){const p=lerRPA();if(!p.comp&&p.pag){$('rp_comp').value=p.pag.slice(0,7);p.comp=p.pag.slice(0,7);}
+ const c=calcRPA(p);const A=[...c.A];const cpf=$('rp_cpf').value;if(cpf&&cpf.replace(/\D/g,'').length===11&&!cpfValido(cpf))A.unshift(['er','CPF inválido.']);
+ if(p.bruto>0&&!$('rp_cbo').value)A.push(['wa','Informe o CBO: obrigatório no S-1200 para contribuinte individual sem cadastro (S-2300).']);
+ if(p.comp&&p.pag&&p.comp>p.pag.slice(0,7))A.push(['er','Competência posterior à data do pagamento.']);
+ const{vI,vR,vS,vE}=rpaVenc(p);const i=c.irm;const k=c.k;ultimoRPA={p,c,A,vI,vR,vS,vE};
+ $('rp_cathint').innerHTML=`<b class="h">${p.cat} – ${k.n}</b><br>Base INSS ${k.fI*100}% · base IR ${k.fR*100}%${k.sest?' · SEST/SENAT 2,5%':''}`;
+ $('rp_tab').innerHTML=`<tr><th>Item</th><th class="n">Base</th><th class="n">Alíq./Ref.</th><th class="n">Valor</th><th>Vencimento</th><th>Observação</th></tr>
+ <tr><td class="b">INSS do segurado (${k.mei?0:p.contr}%)</td><td class="n">${fmtR(c.bAt)}</td><td class="n">${k.mei?0:p.contr},00%</td><td class="n b er-t">${fmtR(c.inss)}</td><td>${c.inss>0?fd(vI):'—'}</td><td class="mu">Teto ${R(LEG.teto)} · outras empresas ${R(p.ext)} · já descontado no mês ${R(c.inssAnt)}</td></tr>
+ ${k.sest?`<tr><td class="b">SEST/SENAT (2,5%)</td><td class="n">${fmtR(c.baseAt)}</td><td class="n">2,50%</td><td class="n b er-t">${fmtR(c.sest)}</td><td>${fd(vI)}</td><td class="mu">SEST 1,5% + SENAT 1,0% – descontado do transportador</td></tr>`:''}
+ <tr><td class="b">Dedução IR utilizada</td><td class="n">${fmtR(c.rend)}</td><td class="n">${i.simpl?'Simplificado':'Legal'}</td><td class="n">${fmtR(i.ded)}</td><td></td><td class="mu">Legais (INSS+dep.+pensão) ${R(i.leg)} × simplificado ${R(LEG.simpl)}</td></tr>
+ <tr><td class="b">IR pela tabela</td><td class="n">${fmtR(i.base)}</td><td class="n"></td><td class="n">${fmtR(i.tab)}</td><td></td><td class="mu">Rendimento tributável do mês ${R(c.rend)}</td></tr>
+ <tr><td class="b">(−) Redução Lei 15.270/2025</td><td class="n"></td><td class="n"></td><td class="n ok-t">${fmtR(i.red)}</td><td></td><td class="mu">${c.rend<=5000?'faixa até R$ 5.000,00':c.rend<=7350?'R$ 978,62 − 0,133145 × rendimento':'sem redução'}</td></tr>
+ <tr><td class="b">IRRF neste recibo</td><td class="n"></td><td class="n"></td><td class="n b er-t">${fmtR(c.ir)}</td><td>${c.ir>0?fd(vR):'—'}</td><td class="mu">IR do mês ${R(i.ir)} − já retido ${R(p.irAnt)} ${c.irObs}</td></tr>
+ <tr><td class="b">ISSQN</td><td class="n">${fmtR(p.bruto)}</td><td class="n">${fmtR(p.iss)}%</td><td class="n b er-t">${fmtR(c.iss)}</td><td>${c.iss>0?fd(vS):'—'}</td><td class="mu">Somente se a legislação municipal exigir retenção</td></tr>
+ <tr style="color:var(--wa)"><td class="b">Contribuição patronal 20% (Unimed)</td><td class="n">${fmtR(c.baseAt)}</td><td class="n">${c.patr?'20':'0'}%</td><td class="n b">${fmtR(c.patr)}</td><td>${c.patr>0?fd(vI):'—'}</td><td class="mu">Custo da Unimed – sem limite de teto, não desconta do prestador</td></tr>
+ <tr class="tot"><td>Total de descontos</td><td></td><td></td><td class="n">${fmtR(c.tot)}</td><td colspan="2">Custo total para a Unimed: ${R(p.bruto+c.patr)}</td></tr>`;
+ const comp=p.comp?p.comp.split('-').reverse().join('/'):'—';
+ $('rp_es').innerHTML=`<tr><th colspan="2">eSocial – lançamento</th></tr>
+ <tr><td class="b">S-1200 · perApur</td><td>${comp}</td></tr><tr><td class="b">Categoria / CBO</td><td>${p.cat} / ${esc($('rp_cbo').value||'—')}</td></tr>
+ <tr><td class="b">Remuneração (rubrica de serviços)</td><td class="b">${R(p.bruto)}</td></tr><tr><td class="b">Base de contribuição do segurado</td><td>${R(c.bAt)}</td></tr>
+ <tr><td class="b">Desconto INSS do segurado</td><td>${R(c.inss)}</td></tr>${k.sest?`<tr><td class="b">SEST/SENAT</td><td>${R(c.sest)}</td></tr>`:''}
+ <tr><td class="b">infoMV / indMV</td><td>${c.indMV?MVTXT[c.indMV]+` · remunOutrEmpr ${R(p.ext)}`:'Não informar (sem outras fontes)'}</td></tr>
+ <tr><td class="b">S-1210 · data de pagamento</td><td>${fdi(p.pag)}</td></tr><tr><td class="b">S-1210 · valor líquido (vrLiq)</td><td class="b">${R(c.liq)}</td></tr>
+ <tr><td class="b">IRRF (código 0588)</td><td>${R(c.ir)} ${p.dep?`· ${p.dep} dependente(s)`:''}${p.pens?` · pensão ${R(p.pens)}`:''}</td></tr>
+ <tr><td class="b">Envio dos periódicos</td><td>até ${fd(vE)} (S-1299 fecha → DCTFWeb)</td></tr>`;
+ const totPrev=r2(c.inss+c.patr+c.sest);
+ $('rp_dctf').innerHTML=`<tr><th>Recolhimento (DARF DCTFWeb)</th><th class="n">Valor</th><th>Vencimento</th></tr>
+ <tr><td>INSS descontado do segurado</td><td class="n">${fmtR(c.inss)}</td><td>${fd(vI)}</td></tr><tr><td>Contribuição patronal 20%</td><td class="n">${fmtR(c.patr)}</td><td>${fd(vI)}</td></tr>
+ ${k.sest?`<tr><td>SEST/SENAT</td><td class="n">${fmtR(c.sest)}</td><td>${fd(vI)}</td></tr>`:''}<tr class="tot"><td>Total previdenciário (competência ${comp})</td><td class="n">${fmtR(totPrev)}</td><td>${fd(vI)}</td></tr>
+ <tr><td>IRRF 0588 (fato gerador: pagamento ${fdi(p.pag)})</td><td class="n">${fmtR(c.ir)}</td><td>${c.ir>0?fd(vR):'—'}</td></tr>
+ <tr><td>ISSQN retido (guia municipal)</td><td class="n">${fmtR(c.iss)}</td><td>${c.iss>0?fd(vS):'—'}</td></tr>
+ <tr class="tot"><td>Total a recolher</td><td class="n">${fmtR(totPrev+c.ir+c.iss)}</td><td></td></tr>`;
+ $('rp_tot').textContent=R(c.tot);$('rp_liq').textContent=R(c.liq);$('rp_al').innerHTML=alertas(A);}
+$('view-rpa').addEventListener('input',calcRPAUI);$('view-rpa').addEventListener('change',calcRPAUI);
+function limparRPA(){['rp_nome','rp_cpf','rp_nit','rp_cbo','rp_serv'].forEach(i=>$(i).value='');['rp_ext','rp_ant','rp_irant','rp_pens','rp_bruto','rp_out'].forEach(i=>$(i).value='0,00');$('rp_dep').value=0;$('rp_iss').value='0,00';calcRPAUI();}
+function registrarRPA(){calcRPAUI();const{p,c,A,vI,vR,vS}=ultimoRPA;if(!p.bruto){alert('Informe o valor bruto.');return;}
+ const venc=[{trib:'INSS segurado',dt:iso(vI),valor:c.inss},{trib:'INSS patronal',dt:iso(vI),valor:c.patr},{trib:'SEST/SENAT',dt:iso(vI),valor:c.sest},{trib:'IRRF 0588',dt:iso(vR),valor:c.ir},{trib:'ISSQN',dt:iso(vS),valor:c.iss}].filter(v=>v.valor>0);
+ HIST.unshift(regDe('RPA',$('rp_cpf').value.replace(/\D/g,''),$('rp_nome').value,'RPA',p.bruto,{ir:c.ir,inss:c.inss,iss:c.iss,liq:c.liq},venc,A,{patr:c.patr,sest:c.sest,pag:p.pag,comp:p.comp,cat:p.cat,cbo:$('rp_cbo').value,indMV:c.indMV}));salvarHist();toast('RPA registrado.');}
+function cabRel(tit,sub){return`<div class="rh"><img src="${$('logo-img').src}" alt="Unimed Vale do Sepotuba"><div class="rt"><h1>${tit}</h1><div>${sub}</div></div><div class="rd">Setor Fiscal<br>Emitido em ${new Date().toLocaleString('pt-BR')}</div></div>`;}
+function imprimirRPA(){calcRPAUI();const{p,c,vI,vR}=ultimoRPA;const k=c.k;const comp=p.comp?p.comp.split('-').reverse().join('/'):'';
+ $('print-area').innerHTML=cabRel('RECIBO DE PAGAMENTO A AUTÔNOMO – RPA',`Fonte pagadora: Unimed Vale do Sepotuba${CFG.cnpj?' · CNPJ '+fmtCNPJ(CFG.cnpj):''} · ${esc(CFG.mun)}/${esc(CFG.uf)}`)+`
+ <h2>Trabalhador</h2><table><tr><td colspan="2">Nome: <b>${esc($('rp_nome').value)}</b></td><td>CPF: ${esc($('rp_cpf').value)}</td><td>NIT/PIS: ${esc($('rp_nit').value)}</td></tr><tr><td>Categoria eSocial: ${p.cat}</td><td>CBO: ${esc($('rp_cbo').value)}</td><td>Competência: ${comp}</td><td>Pagamento: ${fdi(p.pag)}</td></tr><tr><td colspan="4">Serviço: ${esc($('rp_serv').value)}</td></tr></table>
+ <h2>Valores</h2><table><tr><th>Descrição</th><th class="n">Base</th><th class="n">Valor (R$)</th></tr><tr><td>Valor bruto dos serviços</td><td></td><td class="n">${fmtR(p.bruto)}</td></tr><tr><td>(−) INSS do segurado ${k.mei?0:p.contr}%</td><td class="n">${fmtR(c.bAt)}</td><td class="n">${fmtR(c.inss)}</td></tr>${k.sest?`<tr><td>(−) SEST/SENAT 2,5%</td><td class="n">${fmtR(c.baseAt)}</td><td class="n">${fmtR(c.sest)}</td></tr>`:''}<tr><td>(−) IRRF</td><td class="n">${fmtR(c.irm.base)}</td><td class="n">${fmtR(c.ir)}</td></tr><tr><td>(−) ISSQN</td><td></td><td class="n">${fmtR(c.iss)}</td></tr><tr><td>(−) Outros descontos</td><td></td><td class="n">${fmtR(p.out)}</td></tr><tr><td><b>Valor líquido</b></td><td></td><td class="n"><b>${fmtR(c.liq)}</b></td></tr></table>
+ <h2>Informações para eSocial / DCTFWeb (uso interno)</h2><table><tr><td>Base de contribuição: ${fmtR(c.bAt)}</td><td>Remuneração em outras empresas: ${fmtR(p.ext)}${c.indMV?' · indMV '+c.indMV:''}</td><td>Patronal 20% (Unimed): ${fmtR(c.patr)}</td></tr><tr><td>Venc. previdenciário: ${fd(vI)}</td><td>IRRF 0588 venc.: ${c.ir>0?fd(vR):'—'}</td><td>Dependentes IR: ${p.dep}</td></tr></table>
+ <p style="margin-top:10px">Recebi da Unimed Vale do Sepotuba a importância líquida de <b>${R(c.liq)}</b>, referente aos serviços acima, dando plena quitação, e concordo com os descontos legais aplicados.</p>
+ <div class="ass"><div></div><b>Assinatura do prestador</b><br>${esc($('rp_nome').value)}</div>`;window.print();}
 
-        function parsePercentual(id) {
-            let el = document.getElementById(id);
-            if (!el || !el.value) return 0;
-            let n = parseFloat(el.value.replace(",", "."));
-            return isNaN(n) ? 0 : n;
-        }
+/* ---------- XML helpers ---------- */
+const tg=(n,t)=>n?n.getElementsByTagNameNS('*',t)[0]||null:null;
+const tx=(n,t)=>{const e=tg(n,t);return e?e.textContent.trim():'';};
+const tf=(n,...ts)=>{for(const t of ts){const v=tx(n,t);if(v!=='')return v;}return'';};
+const nm=s=>{const v=parseFloat(String(s||'').replace(',','.'));return isNaN(v)?0:v;};
+const all=(n,t)=>n?[...n.getElementsByTagNameNS('*',t)]:[];
+function lerArquivos(files,cb){[...files].forEach(f=>{const r=new FileReader();r.onload=()=>{try{const doc=new DOMParser().parseFromString(r.result,'application/xml');if(doc.getElementsByTagName('parsererror').length)throw new Error('XML malformado');cb(doc,f.name);}catch(e){cb(null,f.name,e.message);}};r.readAsText(f);});}
+function dropzone(dz,inp,cb){dz.onclick=()=>$(inp).click();$(inp).onchange=e=>{cb(e.target.files);e.target.value='';};['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('hov');}));['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('hov');}));dz.addEventListener('drop',e=>cb(e.dataTransfer.files));}
 
-        function formatarTela(id, val) {
-            let el = document.getElementById(id);
-            if (el) el.value = val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
+/* ---------- NF-e ---------- */
+function analisarNFe(doc,arq){const inf=tg(doc,'infNFe');if(!inf)return{arq,erroLeitura:'Não é um XML de NF-e (infNFe ausente).'};const tol=+CFG.tol||0.05;const A=[];
+ const ide=tg(inf,'ide'),emit=tg(inf,'emit'),dest=tg(inf,'dest'),tot=tg(inf,'ICMSTot');
+ const chave=(inf.getAttribute('Id')||'').replace(/^NFe/,'');const d={arq,chave,nNF:tx(ide,'nNF'),serie:tx(ide,'serie'),mod:tx(ide,'mod'),dh:tf(ide,'dhEmi','dEmi'),fin:tx(ide,'finNFe'),idDest:tx(ide,'idDest'),
+  emitDoc:tf(emit,'CNPJ','CPF'),emitNome:tx(emit,'xNome'),emitUF:tx(tg(emit,'enderEmit'),'UF'),crt:tx(emit,'CRT'),destDoc:tf(dest,'CNPJ','CPF'),destNome:tx(dest,'xNome'),destUF:tx(tg(dest,'enderDest'),'UF'),indIE:tx(dest,'indIEDest'),indFinal:tx(ide,'indFinal')};
+ const T=k=>nm(tx(tot,k));d.vNF=T('vNF');d.vProd=T('vProd');
+ // protocolo
+ const cStat=tx(tg(doc,'infProt'),'cStat');if(!cStat)A.push(['wa','XML sem protocolo de autorização (protNFe). Conferir situação no portal da SEFAZ.']);else if(!['100','150'].includes(cStat))A.push(['er',`Protocolo com cStat ${cStat} – ${esc(tx(tg(doc,'infProt'),'xMotivo'))}.`]);
+ // chave
+ const ci=chaveInfo(chave);if(!ci.dvOk)A.push(['er','Dígito verificador da chave inválido.']);if(ci.k.length===44){if(limpaDoc(ci.cnpj)!==limpaDoc(d.emitDoc).padStart(14,'0'))A.push(['er','CNPJ da chave difere do emitente.']);if(ci.nNF!==+d.nNF||ci.serie!==+d.serie)A.push(['er','Número/série da chave diferem do XML.']);}
+ if(d.emitDoc.length===14&&!cnpjValido(d.emitDoc))A.push(['er','CNPJ do emitente inválido.']);
+ // destinatário
+ const tm=tomadores();if(tm.length&&!tm.includes(limpaDoc(d.destDoc)))A.push(['er',`Destinatário ${fmtCNPJ(d.destDoc)} não é CNPJ do tomador configurado.`]);
+ // totais
+ const calc=T('vProd')-T('vDesc')-T('vICMSDeson')+T('vST')+T('vFCPST')+T('vFrete')+T('vSeg')+T('vOutro')+T('vII')+T('vIPI')+T('vIPIDevol')+nm(tx(tg(inf,'ISSQNtot'),'vServ'));
+ d.vNFcalc=r2(calc);if(Math.abs(d.vNFcalc-d.vNF)>tol)A.push(['er',`vNF ${R(d.vNF)} difere da composição dos totais ${R(d.vNFcalc)} (Δ ${R(d.vNF-d.vNFcalc)}).`]);
+ const dets=all(inf,'det');let sp=0,sCBS=0,sIBS=0,semGrupo=0,cfops=new Set();const itErr=[];
+ dets.forEach(dt=>{const pr=tg(dt,'prod');sp+=nm(tx(pr,'vProd'));const cf=tx(pr,'CFOP');cfops.add(cf);const nI=dt.getAttribute('nItem');
+  const exp=d.idDest==='3'?'7':d.emitUF&&d.destUF&&d.emitUF!==d.destUF?'6':'5';if(cf&&d.fin!=='4'&&cf[0]!==exp&&['5','6','7'].includes(cf[0]))itErr.push(`Item ${nI}: CFOP ${cf} incompatível com o destino (esperado ${exp}.xxx).`);
+  if(exp==='6'&&d.indIE==='9'&&['6101','6102'].includes(cf))A.push(['wa',`Item ${nI}: CFOP ${cf} para destinatário não contribuinte – usual 6.107/6.108.`]);
+  const g=tg(dt,'IBSCBS');if(!g){semGrupo++;return;}const gc=tg(g,'gCBS'),gu=tg(g,'gIBSUF'),gm=tg(g,'gIBSMun');const vBC=nm(tx(g,'vBC'));
+  const chk=(grp,campoP,campoV,esp,lbl)=>{if(!grp)return 0;const p=nm(tx(grp,campoP)),v=nm(tx(grp,campoV));const red=nm(tx(grp,'pRedAliq')),ef=tx(grp,'pAliqEfet');const pe=ef!==''?nm(ef):p*(1-red/100);
+   if(Math.abs(p-esp)>0.0001&&(d.dh||'')>='2026')itErr.push(`Item ${nI}: ${lbl} ${p}% (esperado ${esp}% em 2026).`);if(Math.abs(r2(vBC*pe/100)-v)>Math.max(0.02,tol))itErr.push(`Item ${nI}: ${lbl} R$ ${fmtR(v)} ≠ base × alíquota efetiva (R$ ${fmtR(vBC*pe/100)}).`);return v;};
+  sCBS+=chk(gc,'pCBS','vCBS',LEG.rt.cbs,'CBS');sIBS+=chk(gu,'pIBSUF','vIBSUF',LEG.rt.ibsUF,'IBS UF')+chk(gm,'pIBSMun','vIBSMun',LEG.rt.ibsMun,'IBS Mun');});
+ if(Math.abs(r2(sp)-d.vProd)>tol)A.push(['er',`Soma dos itens (R$ ${fmtR(sp)}) ≠ vProd total (R$ ${fmtR(d.vProd)}).`]);
+ itErr.slice(0,8).forEach(e=>A.push(['wa',e]));if(itErr.length>8)A.push(['wa',`… e mais ${itErr.length-8} ocorrências nos itens.`]);
+ // DIFAL
+ if(d.emitUF&&d.destUF&&d.emitUF!==d.destUF){if(d.indIE==='9'&&T('vICMS')>0&&!T('vICMSUFDest'))A.push(['wa','Interestadual para não contribuinte sem partilha de DIFAL (vICMSUFDest) – EC 87/2015 e LC 190/2022.']);
+  if(d.indIE==='1'&&d.indFinal==='1')A.push(['in','Interestadual para contribuinte com consumo final: DIFAL de uso/consumo pode ser devido pelo destinatário – conferir.']);}
+ // IBS/CBS
+ const tIB=tg(inf,'IBSCBSTot');d.vCBS=r2(sCBS);d.vIBS=r2(sIBS);d.temIBS=dets.length>semGrupo;
+ if(d.crt==='3'){if(semGrupo===dets.length){if((d.dh||'').slice(0,10)>=LEG.rt.rej&&!['2','4'].includes(d.fin))A.push(['er','Emitente regime normal sem grupo IBS/CBS emitida após 03/08/2026 (rejeição 1115 em produção). Confirmar autorização no portal.']);else A.push(['wa','Emitente regime normal sem grupo IBS/CBS (obrigação legal desde 01/01/2026).']);}
+  else if(semGrupo)A.push(['wa',`${semGrupo} item(ns) sem grupo IBS/CBS.`]);}
+ else if(['1','4'].includes(d.crt)&&!d.temIBS)A.push(['in','Simples/MEI: grupo IBS/CBS obrigatório a partir de 04/01/2027.']);
+ if(tIB){const tc=nm(tx(tg(tIB,'gCBS'),'vCBS')),ti=nm(tx(tg(tIB,'gIBS'),'vIBS'));if(Math.abs(tc-sCBS)>tol)A.push(['er',`Total CBS (R$ ${fmtR(tc)}) ≠ soma dos itens (R$ ${fmtR(sCBS)}).`]);if(ti&&Math.abs(ti-sIBS)>tol)A.push(['er',`Total IBS (R$ ${fmtR(ti)}) ≠ soma dos itens (R$ ${fmtR(sIBS)}).`]);}
+ else if(d.temIBS)A.push(['wa','Itens com IBS/CBS mas sem totalizador IBSCBSTot.']);
+ if(d.fin==='4')A.push(['in','NF-e de devolução (finNFe 4).']);d.cfops=[...cfops].join(', ');
+ if(!A.some(a=>a[0]!=='in'))A.unshift(['ok','Nenhuma inconsistência encontrada.']);d.A=A;d.st=stOf(A);return d;}
+function addNFe(files){lerArquivos(files,(doc,arq,err)=>{const d=doc?analisarNFe(doc,arq):{arq,erroLeitura:err};if(d.chave&&nfeLote.some(x=>x.chave===d.chave))return;nfeLote.push(d);renderNFe();});}
+dropzone($('nfe_drop'),'nfe_file',addNFe);
+function kpis(el,arr){$(el).innerHTML=arr.map(k=>`<div class="kpi"><span>${k[0]}</span><strong>${k[1]}</strong></div>`).join('');}
+function renderNFe(){const L=nfeLote.filter(x=>!x.erroLeitura);kpis('nfe_kpi',[['XMLs',nfeLote.length],['Valor total',R(L.reduce((s,x)=>s+x.vNF,0))],['CBS + IBS destacados',R(L.reduce((s,x)=>s+x.vCBS+x.vIBS,0))],['Com erro',L.filter(x=>x.st==='ERRO').length],['Com alerta',L.filter(x=>x.st==='ALERTA').length]]);
+ $('nfe_tab').innerHTML=`<tr><th>Status</th><th>NF / Série</th><th>Emissão</th><th>Emitente</th><th>UF</th><th>CFOP</th><th class="n">vNF</th><th class="n">CBS</th><th class="n">IBS</th><th></th></tr>`+nfeLote.map((d,i)=>d.erroLeitura?`<tr><td><span class="bd er">ERRO</span></td><td colspan="9">${esc(d.arq)} – ${esc(d.erroLeitura)}</td></tr>`:
+ `<tr><td>${stBd(d.st)}</td><td class="b">${d.nNF}/${d.serie}</td><td>${fdi(d.dh)}</td><td>${esc(d.emitNome)}<br><span class="mu mono">${fmtCNPJ(d.emitDoc)} · CRT ${d.crt}</span></td><td>${d.emitUF}→${d.destUF}</td><td class="mono">${d.cfops}</td><td class="n b">${fmtR(d.vNF)}</td><td class="n">${fmtR(d.vCBS)}</td><td class="n">${fmtR(d.vIBS)}</td><td><button class="btn sm" onclick="tog('nd${i}')">Detalhes</button></td></tr><tr class="det" id="nd${i}" style="display:none"><td colspan="10"><div class="mono mu" style="margin-bottom:6px">Chave ${d.chave}</div><div class="alerts">${alertas(d.A)}</div></td></tr>`).join('');}
+const tog=id=>{const e=$(id);e.style.display=e.style.display==='none'?'':'none';};
+/* manual */
+const NFM=[['vProd','Produtos',1],['vDesc','(−) Desconto',-1],['vICMSDeson','(−) ICMS desonerado',-1],['vST','ICMS-ST',1],['vFCPST','FCP-ST',1],['vFrete','Frete',1],['vSeg','Seguro',1],['vOutro','Outras despesas',1],['vII','II',1],['vIPI','IPI',1],['vIPIDevol','IPI devolvido',1],['vNF','vNF informado',0]];
+$('nfm').innerHTML=NFM.map(([k,l])=>`<div class="fg"><label>${l}</label><input class="moeda${k==='vNF'?' hl':''}" id="nm_${k}" value="0,00"></div>`).join('')+`<div class="fg"><label>Chave (opcional)</label><input id="nm_ch" class="mono" style="text-transform:uppercase"></div>`;
+$('nfm').addEventListener('input',()=>{const c=r2(NFM.filter(x=>x[2]).reduce((s,[k,,f])=>s+f*m('nm_'+k),0));const v=m('nm_vNF');const A=[];if(v||c){const df=r2(v-c);A.push(Math.abs(df)>(+CFG.tol||0.05)?['er',`vNF calculado ${R(c)} – diferença ${R(df)}.`]:['ok',`vNF confere: ${R(c)}.`]);}
+ const ch=$('nm_ch').value;if(ch){const ci=chaveInfo(ch);A.push(ci.ok?['ok',`Chave válida – ${ci.modN} nº ${ci.nNF} série ${ci.serie}, ${ci.uf} ${ci.aamm}, emitente ${fmtCNPJ(ci.cnpj)}.`]:['er',ci.erros.join(' ')]);}
+ if(c||v)A.push(['in',`CBS (0,9%) estimada sobre produtos−descontos: ${R((m('nm_vProd')-m('nm_vDesc'))*.009)} · IBS (0,1%): ${R((m('nm_vProd')-m('nm_vDesc'))*.001)} – conferir com o XML (base pode excluir ICMS/PIS/COFINS conforme NT).`]);$('nfm_al').innerHTML=alertas(A);});
 
-        function aplicarMascaraMoeda(e) {
-            let v = e.target.value.replace(/\D/g, "");
-            if (v === "") { e.target.value = ""; return; }
-            v = (parseInt(v, 10) / 100).toFixed(2);
-            e.target.value = v.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-        }
+/* ---------- NFS-e ---------- */
+function analisarNFSe(doc,arq){const root=tg(doc,'infNFSe')||tg(doc,'InfNfse')||tg(doc,'CompNfse')||tg(doc,'infDPS')||doc.documentElement;if(!root)return{arq,erroLeitura:'XML não reconhecido.'};
+ const tol=+CFG.tol||0.05;const A=[];const nac=!!(tg(doc,'infNFSe')||tg(doc,'infDPS'));
+ const prest=tg(doc,'prest')||tg(doc,'emit')||tg(doc,'PrestadorServico')||tg(doc,'Prestador')||tg(doc,'IdentificacaoPrestador');
+ const toma=tg(doc,'toma')||tg(doc,'TomadorServico')||tg(doc,'Tomador');
+ const d={arq,nac,num:tf(doc,'nNFSe','Numero','nDPS'),dh:tf(doc,'dhEmi','DataEmissao','dCompet'),prestDoc:tf(prest,'CNPJ','Cnpj','CPF','Cpf')||tf(tg(doc,'emit'),'CNPJ'),prestNome:tf(tg(doc,'emit'),'xNome')||tf(prest,'xNome','RazaoSocial','NomeFantasia'),tomaDoc:tf(toma,'CNPJ','Cnpj','CPF','Cpf'),
+  vServ:nm(tf(doc,'vServ','ValorServicos')),desc:nm(tf(doc,'vDescIncond','DescontoIncondicionado')),descC:nm(tf(doc,'vDescCond','DescontoCondicionado')),
+  ir:nm(tf(doc,'vRetIRRF','ValorIr')),csl:nm(tf(doc,'vRetCSLL','ValorCsll')),inss:nm(tf(doc,'vRetCP','ValorInss')),
+  aliq:nm(tf(doc,'pAliq','pAliqAplic','Aliquota')),vISS:nm(tf(doc,'vISSQN','ValorIss')),liqXml:nm(tf(doc,'vLiq','ValorLiquidoNfse')),serv:tf(doc,'cTribNac','ItemListaServico'),desc2:tf(doc,'xDescServ','Discriminacao').slice(0,140)};
+ const tpRetPC=tx(doc,'tpRetPisCofins');let vp=nm(tf(doc,'vPis','ValorPis')),vc=nm(tf(doc,'vCofins','ValorCofins'));
+ if(nac&&['0','2'].includes(tpRetPC)){d.pisRetInfo=vp+vc;vp=vc=0;}
+ d.pis=vp;d.cof=vc;
+ if(d.aliq>0&&d.aliq<1)d.aliq*=100;
+ const tpISS=tx(doc,'tpRetISSQN'),issRetAbr=tx(doc,'IssRetido');d.issRet=nac?tpISS==='2'||tpISS==='3':issRetAbr==='1';
+ const op=tf(doc,'opSimpNac','OptanteSimplesNacional');d.regime=nac?(op==='2'?'MEI':op==='3'?'SIMPLES':'NORMAL'):(op==='1'?'SIMPLES':'NORMAL');
+ if(!d.vISS&&d.aliq)d.vISS=r2((d.vServ-d.desc)*d.aliq/100);
+ d.retXml=r2(d.ir+d.csl+d.inss+d.pis+d.cof+(d.issRet?d.vISS:0));
+ // conferência líquido
+ const liq=r2(d.vServ-d.desc-d.descC-d.retXml);d.liqCalc=liq;if(d.liqXml&&Math.abs(liq-d.liqXml)>tol)A.push(['er',`Líquido do XML ${R(d.liqXml)} ≠ serviço − descontos − retenções ${R(liq)}.`]);
+ // esperado
+ const pk=$('ns_preset').value,P=PRESETS[pk];const isr=$('ns_issret').value;const inssSel=$('ns_inss').value;
+ const e=calcPJ({bruto:d.vServ,desc:d.desc,regime:d.regime,anexoIV:false,ir:P.ir,csrf:!!P.csrf,inss:inssSel==='preset'?P.inss:inssSel,inssAliq:11,inssBase:100,inssDed:0,adic:0,issRet:isr==='auto'?d.issRet:isr==='1',iss:d.aliq||+CFG.iss,dar:P.dar,tol});
+ d.esp=e;const cmp=[['IRRF',d.ir,e.ir],['CSLL',d.csl,e.csl],['PIS',d.pis,e.pis],['COFINS',d.cof,e.cof],['INSS',d.inss,e.inss],['ISS retido',d.issRet?d.vISS:0,e.iss]];
+ cmp.forEach(([n,x,y])=>{if(Math.abs(x-y)>tol)A.push([Math.abs(x-y)>1?'er':'wa',`${n}: XML ${R(x)} × esperado ${R(y)} (natureza “${esc(P.n.split(' (')[0].split(' –')[0])}”).`]);});
+ d.difRet=r2(d.retXml-e.tot);
+ // demais
+ const tm=tomadores();if(tm.length&&d.tomaDoc&&!tm.includes(limpaDoc(d.tomaDoc)))A.push(['er',`Tomador ${fmtCNPJ(d.tomaDoc)} não confere com o CNPJ configurado.`]);
+ if(d.prestDoc.length===14&&!cnpjValido(d.prestDoc))A.push(['er','CNPJ do prestador inválido.']);
+ if(d.regime!=='NORMAL'&&(d.ir+d.csl+d.pis+d.cof)>0)A.push(['wa','Prestador optante pelo Simples/MEI com retenção federal destacada – conferir.']);
+ if(d.issRet&&d.regime==='NORMAL'&&d.aliq&&(d.aliq<2||d.aliq>5))A.push(['wa',`Alíquota de ISS ${fmtR(d.aliq)}% fora de 2%–5%.`]);
+ if(d.pisRetInfo)A.push(['in',`PIS/COFINS destacados (R$ ${fmtR(d.pisRetInfo)}) sem indicação de retenção (tpRetPisCofins ${tpRetPC}).`]);
+ d.temIBS=!!tg(doc,'IBSCBS');d.vCBS=nm(tx(tg(doc,'gCBS'),'vCBS'));d.vIBS=nm(tx(doc,'vIBSTot'))||nm(tx(tg(doc,'gIBSUF'),'vIBSUF'));
+ if(nac&&!d.temIBS&&d.regime==='NORMAL')A.push(['in','NFS-e sem grupo IBS/CBS – conferir cronograma do município/padrão nacional.']);
+ if(!A.some(a=>a[0]!=='in'))A.unshift(['ok','Retenções e valores conferem.']);d.A=A;d.st=stOf(A);return d;}
+function addNS(files){lerArquivos(files,(doc,arq,err)=>{const d=doc?analisarNFSe(doc,arq):{arq,erroLeitura:err};nsLote.push(d);renderNS();});}
+dropzone($('ns_drop'),'ns_file',addNS);
+['ns_preset','ns_issret','ns_inss'].forEach(id=>$(id).addEventListener('change',()=>{if(nsLote.length)toast('Reimporte os XMLs para recalcular com a nova natureza.');}));
+function renderNS(){const L=nsLote.filter(x=>!x.erroLeitura);kpis('ns_kpi',[['XMLs',nsLote.length],['Valor dos serviços',R(L.reduce((s,x)=>s+x.vServ,0))],['Retenções no XML',R(L.reduce((s,x)=>s+x.retXml,0))],['Diferença vs. esperado',R(L.reduce((s,x)=>s+x.difRet,0))],['Com erro/alerta',L.filter(x=>x.st!=='OK').length]]);
+ $('ns_tab').innerHTML=`<tr><th>Status</th><th>Nº</th><th>Emissão</th><th>Prestador</th><th>Regime</th><th class="n">Serviço</th><th class="n">IR</th><th class="n">CSRF</th><th class="n">INSS</th><th class="n">ISS ret.</th><th class="n">Líquido</th><th></th></tr>`+nsLote.map((d,i)=>d.erroLeitura?`<tr><td><span class="bd er">ERRO</span></td><td colspan="11">${esc(d.arq)} – ${esc(d.erroLeitura)}</td></tr>`:
+ `<tr><td>${stBd(d.st)}</td><td class="b">${esc(d.num)}</td><td>${fdi(d.dh)}</td><td>${esc(d.prestNome)}<br><span class="mu mono">${fmtCNPJ(d.prestDoc)}</span></td><td>${d.regime}</td><td class="n b">${fmtR(d.vServ)}</td><td class="n">${fmtR(d.ir)}</td><td class="n">${fmtR(d.pis+d.cof+d.csl)}</td><td class="n">${fmtR(d.inss)}</td><td class="n">${fmtR(d.issRet?d.vISS:0)}</td><td class="n b">${fmtR(d.liqXml||d.liqCalc)}</td><td><button class="btn sm" onclick="tog('sd${i}')">Detalhes</button></td></tr>
+ <tr class="det" id="sd${i}" style="display:none"><td colspan="12"><div class="mu" style="margin-bottom:6px">${esc(d.serv)} · ${esc(d.desc2)} · ${d.nac?'Padrão Nacional':'ABRASF'} · esperado: IR ${R(d.esp.ir)} · CSRF ${R(d.esp.pis+d.esp.cof+d.esp.csl)} · INSS ${R(d.esp.inss)} · ISS ${R(d.esp.iss)} · líquido ${R(d.esp.liq)}</div><div class="alerts">${alertas(d.A)}</div></td></tr>`).join('');}
+function registrarLote(t){const L=(t==='nfe'?nfeLote:nsLote).filter(x=>!x.erroLeitura);if(!L.length){toast('Lote vazio.');return;}let n=0;
+ L.forEach(d=>{if(t==='nfe'){if(HIST.some(h=>h.chave===d.chave))return;HIST.unshift(regDe('NF-e',d.emitDoc,d.emitNome,d.nNF+'/'+d.serie,d.vNF,{cbs:d.vCBS,ibs:d.vIBS,liq:d.vNF},[],d.A,{chave:d.chave,emi:(d.dh||'').slice(0,10)}));}
+  else{const ag=CFG.agenda||AG_DEF,f=k=>ag.find(a=>a.n.includes(k))||{d:20,r:'antecipa'};const emi=(d.dh||'').slice(0,10);const vI=vencApos(emi,+f('INSS').d,f('INSS').r,fer()),vS=vencApos(emi,+f('ISSQN').d,f('ISSQN').r,fer());
+   const venc=[{trib:'INSS retido',dt:iso(vI),valor:d.inss},{trib:'ISSQN',dt:iso(vS),valor:d.issRet?d.vISS:0}].filter(v=>v.valor>0);
+   HIST.unshift(regDe('NFS-e',d.prestDoc,d.prestNome,d.num,d.vServ,{ir:d.ir,pis:d.pis,cof:d.cof,csl:d.csl,inss:d.inss,iss:d.issRet?d.vISS:0,cbs:d.vCBS,ibs:d.vIBS,liq:d.liqXml||d.liqCalc},venc,d.A,{emi,obsPag:'IR/CSRF vencem pelo pagamento – registrar na aba Retenções PJ ao pagar'}));}n++;});
+ salvarHist();toast(`${n} documento(s) registrados.`);}
+function exportLote(t){const L=(t==='nfe'?nfeLote:nsLote).filter(x=>!x.erroLeitura);if(!L.length){toast('Lote vazio.');return;}
+ const rows=t==='nfe'?L.map(d=>({Status:d.st,NF:d.nNF,Serie:d.serie,Emissao:fdi(d.dh),Emitente:d.emitNome,CNPJ:fmtCNPJ(d.emitDoc),CRT:d.crt,UF_Orig:d.emitUF,UF_Dest:d.destUF,CFOP:d.cfops,vNF:d.vNF,CBS:d.vCBS,IBS:d.vIBS,Chave:d.chave,Ocorrencias:d.A.map(a=>a[1].replace(/<[^>]+>/g,'')).join(' | ')})):
+ L.map(d=>({Status:d.st,Numero:d.num,Emissao:fdi(d.dh),Prestador:d.prestNome,CNPJ:fmtCNPJ(d.prestDoc),Regime:d.regime,Servico:d.vServ,IR:d.ir,PIS:d.pis,COFINS:d.cof,CSLL:d.csl,INSS:d.inss,ISS_Retido:d.issRet?d.vISS:0,Liquido:d.liqXml||d.liqCalc,Esperado_Retencoes:d.esp.tot,Diferenca:d.difRet,Ocorrencias:d.A.map(a=>a[1].replace(/<[^>]+>/g,'')).join(' | ')}));
+ xlsx(rows,`conferencia_${t}_${iso(hoje())}.xlsx`);}
 
-        function aplicarMascaraPercentual(e) {
-            e.target.value = e.target.value.replace(/[^\d,]/g, "");
-        }
+/* ---------- FERRAMENTAS ---------- */
+$('fx_chave').addEventListener('input',e=>{const ci=chaveInfo(e.target.value);const k=ci.k;if(!k){$('fx_chave_r').innerHTML='';return;}
+ $('fx_chave_r').innerHTML=(k.length===44?`<table class="t"><tr><td>UF</td><td class="b">${ci.uf}</td><td>Ano/mês</td><td class="b">${ci.aamm}</td></tr><tr><td>Emitente</td><td class="b mono">${fmtCNPJ(ci.cnpj)}</td><td>Modelo</td><td class="b">${ci.modN}</td></tr><tr><td>Série / Número</td><td class="b">${ci.serie} / ${ci.nNF}</td><td>Tipo emissão</td><td class="b">${ci.tpEmis==='1'?'Normal':'Contingência ('+ci.tpEmis+')'}</td></tr><tr><td>Código numérico</td><td class="mono">${ci.cNF}</td><td>DV</td><td class="b">${k[43]} (calc. ${ci.dvCalc})</td></tr></table>`:'')+alertas(ci.ok?[['ok','Chave válida.']]:ci.erros.map(x=>['er',x]));});
+$('fx_doc').addEventListener('input',e=>{const raw=e.target.value;const c=limpaDoc(raw);let A=[];if(!c){$('fx_doc_r').innerHTML='';return;}
+ if(c.length===11&&/^\d+$/.test(c))A=[cpfValido(c)?['ok',`CPF válido: ${fmtCPF(c)}`]:['er','CPF inválido.']];
+ else if(c.length===14)A=[cnpjValido(c)?['ok',`CNPJ válido: ${fmtCNPJ(c)}${/[A-Z]/.test(c)?' (alfanumérico)':''}`]:['er','CNPJ inválido (DV não confere).']];else A=[['in',`${c.length} posições – CPF tem 11, CNPJ tem 14.`]];
+ $('fx_doc_r').innerHTML=alertas(A);});
+const CL=['CNPJ do emitente ativo e regime confirmado (aba Consulta CNPJ)','Destinatário/tomador é a Unimed (CNPJ e endereço corretos)','Chave de acesso válida e documento autorizado na SEFAZ/Ambiente Nacional','Data de emissão dentro da competência e do contrato/pedido','Quantidades, preços e descrição conferem com pedido/OC e recebimento físico','NCM e CFOP coerentes com a operação (5/6.xxx, não contribuinte 6.107/6.108)','ICMS-ST / DIFAL conferidos em compras interestaduais','Grupo IBS/CBS destacado (CBS 0,9% · IBS 0,1%) para emitente regime normal','NFS-e: código do serviço (cTribNac/LC 116) e local de incidência do ISS','Retenções IR/CSRF/INSS/ISS conferidas e líquido igual ao calculado','Liminares/declarações (Simples, dispensa INSS) arquivadas','Lançado no ERP e registrado no histórico para Reinf/DCTFWeb'];
+$('cl').innerHTML=CL.map(t=>`<label><input type="checkbox"> ${t}</label>`).join('');
+const CFOPS=[['1.102/2.102','Compra para comercialização'],['1.126/2.126','Compra para prestação de serviço sujeito ao ISS'],['1.403/2.403','Compra p/ comercialização com ST'],['1.406/2.406','Compra de ativo imobilizado com ST'],['1.407/2.407','Compra para uso e consumo com ST'],['1.551/2.551','Compra de bem para o ativo imobilizado'],['1.556/2.556','Compra de material para uso ou consumo'],['1.933/2.933','Aquisição de serviço tributado pelo ISS'],['1.949/2.949','Outra entrada não especificada'],['5.101/6.101','Venda de produção do estabelecimento'],['5.102/6.102','Venda de mercadoria adquirida de terceiros'],['6.107','Venda de produção própria a não contribuinte (interestadual)'],['6.108','Venda de mercadoria de terceiros a não contribuinte (interestadual)'],['5.403/6.403','Venda com ST – contribuinte substituto'],['5.405','Venda com ST – contribuinte substituído'],['5.910/6.910','Remessa em bonificação, doação ou brinde'],['5.915/6.915','Remessa para conserto ou reparo'],['5.916/6.916','Retorno de conserto ou reparo'],['5.933/6.933','Prestação de serviço tributado pelo ISS'],['5.949/6.949','Outra saída não especificada'],['5.202/6.202','Devolução de compra para comercialização'],['5.556/6.556','Devolução de compra de material de uso/consumo']];
+function renderCF(){const q=$('cf_q').value.toLowerCase();$('cf_tab').innerHTML='<tr><th>CFOP</th><th>Descrição</th></tr>'+CFOPS.filter(c=>(c[0]+c[1]).toLowerCase().includes(q)).map(c=>`<tr><td class="b mono">${c[0]}</td><td>${c[1]}</td></tr>`).join('');}
+$('cf_q').addEventListener('input',renderCF);renderCF();
 
-        document.querySelectorAll('.moeda').forEach(el => el.addEventListener('input', aplicarMascaraMoeda));
-        document.querySelectorAll('.porcentagem').forEach(el => el.addEventListener('input', aplicarMascaraPercentual));
-        
-        async function buscarCNPJ() {
-            const input = document.getElementById('cnpj_input').value;
-            const cnpjLimpo = input.replace(/\D/g, '');
-            const btn = document.getElementById('btn_consultar');
+/* ---------- REFORMA ---------- */
+function calcRF(){const p={v:m('rf_v'),loc:pc('rf_loc'),pc:+$('rf_pc').value,red:+$('rf_red').value,cbs:pc('rf_cbs'),ibs:pc('rf_ibs')};const tipo=$('rf_tipo').value==='S'?'ISS':'ICMS';const rows=simReforma(p);
+ $('rf_tab').innerHTML=`<tr><th>Ano</th><th class="n">PIS/COFINS</th><th class="n">${tipo}</th><th class="n">CBS</th><th class="n">IBS</th><th class="n">Total</th><th class="n">Carga</th><th>Marco</th></tr>`+rows.map(r=>`<tr${r.y===2026?' style="background:#fafcff"':''}><td class="b">${r.y}</td><td class="n">${fmtR(r.pc)}</td><td class="n">${fmtR(r.loc)}</td><td class="n">${r.y===2026?'<span class="mu">'+fmtR(p.v*.009)+'*</span>':fmtR(r.cbs)}</td><td class="n">${r.y===2026?'<span class="mu">'+fmtR(p.v*.001)+'*</span>':fmtR(r.ibs)}</td><td class="n b">${fmtR(r.tot)}</td><td class="n">${r.carga.toFixed(2).replace('.',',')}%</td><td class="mu" style="font-size:11px">${{2026:'Ano-teste: *destaque informativo, sem recolhimento',2027:'CBS plena; PIS/COFINS extintos; IS inicia',2028:'IBS teste 0,1%',2029:'ICMS/ISS 90% · IBS 10%',2030:'ICMS/ISS 80% · IBS 20%',2031:'ICMS/ISS 70% · IBS 30%',2032:'ICMS/ISS 60% · IBS 40%',2033:'ICMS/ISS extintos · IBS pleno'}[r.y]}</td></tr>`).join('');}
+$('view-reforma').addEventListener('input',calcRF);$('view-reforma').addEventListener('change',calcRF);
 
-            if (cnpjLimpo.length !== 14) { alert("Informe CNPJ com 14 dígitos."); return; }
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando...';
-            
-            try {
-                const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
-                if (!response.ok) throw new Error('Não localizado');
-                const data = await response.json();
+/* ---------- HISTÓRICO ---------- */
+function filtroHist(){const de=$('h_de').value,ate=$('h_ate').value,t=$('h_tipo').value,s=$('h_st').value,q=$('h_q').value.toLowerCase();
+ return HIST.filter(h=>(!de||h.data>=de)&&(!ate||h.data<=ate)&&(!t||h.tipo===t)&&(!s||h.st===s)&&(!q||(h.nome+h.doc+h.nf+(h.obs||'')).toLowerCase().includes(q)));}
+function renderHist(){const H=filtroHist();const s=k=>H.reduce((t,x)=>t+(+x[k]||0),0);
+ $('h_kpi').innerHTML=[['Registros',H.length],['Bruto',R(s('bruto'))],['IRRF',R(s('ir'))],['CSRF',R(s('pis')+s('cof')+s('csl'))],['INSS',R(s('inss'))],['ISS',R(s('iss'))]].map(k=>`<div class="kpi"><span>${k[0]}</span><strong style="font-size:15px">${k[1]}</strong></div>`).join('');
+ const tr=[['IRRF','ir'],['PIS','pis'],['COFINS','cof'],['CSLL','csl'],['INSS retido','inss'],['ISSQN','iss'],['INSS patronal (RPA)','patr'],['CBS destacada','cbs'],['IBS destacado','ibs']];
+ $('h_trib').innerHTML='<tr><th>Tributo</th><th class="n">Docs</th><th class="n">Valor</th><th class="n">% do bruto</th></tr>'+tr.map(([n,k])=>{const v=s(k),c=H.filter(x=>+x[k]>0).length;return`<tr><td class="b">${n}</td><td class="n">${c}</td><td class="n">${fmtR(v)}</td><td class="n">${s('bruto')?(v/s('bruto')*100).toFixed(2).replace('.',','):'0,00'}%</td></tr>`;}).join('')+
+  `<tr class="tot"><td>Status</td><td colspan="3">${['OK','ALERTA','ERRO'].map(x=>stBd(x)+' '+H.filter(h=>h.st===x).length).join(' &nbsp; ')}</td></tr>`;
+ const g={};H.forEach(h=>{const k=h.doc||h.nome;g[k]=g[k]||{nome:h.nome,doc:h.doc,n:0,b:0,r:0,e:0};g[k].n++;g[k].b+=h.bruto;g[k].r+=h.ir+h.pis+h.cof+h.csl+h.inss+h.iss;if(h.st!=='OK')g[k].e++;});
+ $('h_forn').innerHTML='<tr><th>Fornecedor/prestador</th><th class="n">Docs</th><th class="n">Bruto</th><th class="n">Retido</th><th class="n">Ocorr.</th></tr>'+Object.values(g).sort((a,b)=>b.b-a.b).slice(0,15).map(f=>`<tr><td>${esc(f.nome)}<br><span class="mu mono">${f.doc.length===14?fmtCNPJ(f.doc):fmtCPF(f.doc)}</span></td><td class="n">${f.n}</td><td class="n">${fmtR(f.b)}</td><td class="n">${fmtR(f.r)}</td><td class="n ${f.e?'er-t b':''}">${f.e}</td></tr>`).join('');
+ $('h_tab').innerHTML='<tr><th>Data</th><th>Tipo</th><th>Doc</th><th>Fornecedor</th><th class="n">Bruto</th><th class="n">IR</th><th class="n">CSRF</th><th class="n">INSS</th><th class="n">ISS</th><th class="n">Líquido</th><th>Status</th><th></th></tr>'+(H.length?H.map(h=>`<tr title="${esc(h.obs)}"><td>${fdi(h.data)}</td><td><span class="bd in">${h.tipo}</span></td><td>${esc(h.nf)}</td><td>${esc(h.nome)}</td><td class="n">${fmtR(h.bruto)}</td><td class="n">${fmtR(h.ir)}</td><td class="n">${fmtR(h.pis+h.cof+h.csl)}</td><td class="n">${fmtR(h.inss)}</td><td class="n">${fmtR(h.iss)}</td><td class="n b">${fmtR(h.liq)}</td><td>${stBd(h.st)}</td><td><button class="btn sm er" onclick="delHist('${h.id}')"><i class="fa-solid fa-xmark"></i></button></td></tr>`).join(''):'<tr><td colspan="12" class="mu">Sem registros no filtro.</td></tr>');}
+['h_de','h_ate','h_tipo','h_st','h_q'].forEach(id=>$(id).addEventListener('input',renderHist));
+function imprimirHist(){const H=filtroHist();if(!H.length){toast('Nada a imprimir.');return;}const s=k=>H.reduce((t,x)=>t+(+x[k]||0),0);
+ const per=($('h_de').value||$('h_ate').value)?`Período: ${fdi($('h_de').value)} a ${fdi($('h_ate').value)}`:'Período: todos os registros';
+ $('print-area').innerHTML=cabRel('Relatório de conferência fiscal',per+($('h_tipo').value?' · Tipo '+$('h_tipo').value:''))+`<table><tr><th>Bruto</th><th>IRRF</th><th>CSRF</th><th>INSS</th><th>ISS</th><th>Patronal RPA</th><th>Registros</th></tr><tr><td class="n">${fmtR(s('bruto'))}</td><td class="n">${fmtR(s('ir'))}</td><td class="n">${fmtR(s('pis')+s('cof')+s('csl'))}</td><td class="n">${fmtR(s('inss'))}</td><td class="n">${fmtR(s('iss'))}</td><td class="n">${fmtR(s('patr'))}</td><td class="n">${H.length}</td></tr></table>
+ <h2>Documentos</h2><table><tr><th>Data</th><th>Tipo</th><th>Doc</th><th>Fornecedor / prestador</th><th class="n">Bruto</th><th class="n">IR</th><th class="n">CSRF</th><th class="n">INSS</th><th class="n">ISS</th><th class="n">Líquido</th><th>Status</th></tr>${H.map(h=>`<tr><td>${fdi(h.data)}</td><td>${h.tipo}</td><td>${esc(h.nf)}</td><td>${esc(h.nome)}</td><td class="n">${fmtR(h.bruto)}</td><td class="n">${fmtR(h.ir)}</td><td class="n">${fmtR(h.pis+h.cof+h.csl)}</td><td class="n">${fmtR(h.inss)}</td><td class="n">${fmtR(h.iss)}</td><td class="n">${fmtR(h.liq)}</td><td>${h.st}</td></tr>`).join('')}</table>
+ <div class="ass"><div></div>Responsável – Setor Fiscal</div>`;window.print();}
+function delHist(id){HIST=HIST.filter(h=>h.id!==id);salvarHist();renderHist();}
+function limparHist(){if(confirm('Apagar todo o histórico deste navegador? Faça backup antes.')){HIST=[];salvarHist();renderHist();}}
+function exportHist(){const H=filtroHist();if(!H.length){toast('Nada a exportar.');return;}
+ const rows=H.map(h=>({Data:fdi(h.data),Tipo:h.tipo,Documento:h.nf,CNPJ_CPF:h.doc,Fornecedor:h.nome,Natureza:h.natureza||'',Emissao:fdi(h.emi),Pagamento:fdi(h.pag),Bruto:h.bruto,IRRF:h.ir,PIS:h.pis,COFINS:h.cof,CSLL:h.csl,INSS:h.inss,ISS:h.iss,INSS_Patronal:h.patr||0,SEST_SENAT:h.sest||0,Competencia:h.comp||'',Categoria:h.cat||'',CBO:h.cbo||'',indMV:h.indMV||'',CBS:h.cbs,IBS:h.ibs,Liquido:h.liq,Status:h.st,Vencimentos:(h.venc||[]).map(v=>`${v.trib} ${fdi(v.dt)} ${fmtR(v.valor)}`).join(' | '),Ocorrencias:h.obs,Chave:h.chave||''}));
+ xlsx(rows,`historico_fiscal_${iso(hoje())}.xlsx`);}
+function backupHist(){const b=new Blob([JSON.stringify({v:4,hist:HIST,cfg:CFG},null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`backup_calculadora_fiscal_${iso(hoje())}.json`;a.click();}
+function importHist(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);const ids=new Set(HIST.map(h=>h.id));(j.hist||[]).forEach(h=>{if(!ids.has(h.id))HIST.push(h);});HIST.sort((a,b)=>b.data.localeCompare(a.data));if(j.cfg&&confirm('Restaurar também as configurações?'))CFG=Object.assign({},CFG_DEF,j.cfg);LS.set('afp_cfg',CFG);salvarHist();renderHist();toast('Backup restaurado.');}catch(e){alert('Arquivo inválido.');}};r.readAsText(f);inp.value='';}
+function xlsx(rows,nome){if(window.XLSX){const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=Object.keys(rows[0]).map(k=>({wch:Math.min(45,Math.max(10,k.length+2))}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Dados');XLSX.writeFile(wb,nome);}
+ else{const ks=Object.keys(rows[0]);const csv=[ks.join(';'),...rows.map(r=>ks.map(k=>typeof r[k]==='number'?String(r[k]).replace('.',','):'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));a.download=nome.replace('.xlsx','.csv');a.click();}}
 
-                document.getElementById('res_nome').innerText = data.razao_social;
-                document.getElementById('res_cnpj').innerText = input;
-                document.getElementById('res_fantasia').innerText = data.nome_fantasia || "-";
+/* ---------- CONFIG ---------- */
+function renderCfg(){$('cf_cnpj').value=CFG.cnpj?fmtCNPJ(CFG.cnpj):'';$('cf_cnpjs').value=CFG.cnpjs||'';$('cf_uf').value=CFG.uf;$('cf_mun').value=CFG.mun;$('cf_tol').value=fmtR(CFG.tol);$('cf_iss').value=fmtR(CFG.iss);$('cf_fer').value=CFG.fer||'';renderAgCfg();}
+function renderAgCfg(){$('cf_ag').innerHTML='<tr><th>Obrigação</th><th>Tipo</th><th>Dia</th><th>Se não útil</th><th></th></tr>'+(CFG.agenda||AG_DEF).map((a,i)=>`<tr><td><input data-i="${i}" data-k="n" value="${esc(a.n)}" style="width:100%;border:1px solid var(--bd);border-radius:5px;padding:4px 6px;font:600 12px Inter"></td><td><select data-i="${i}" data-k="t" style="border:1px solid var(--bd);border-radius:5px;padding:4px"><option value="dia"${a.t==='dia'?' selected':''}>Dia do mês</option><option value="util"${a.t==='util'?' selected':''}>N-ésimo dia útil</option></select></td><td><input type="number" min="1" max="31" data-i="${i}" data-k="d" value="${a.d}" style="width:60px;border:1px solid var(--bd);border-radius:5px;padding:4px"></td><td><select data-i="${i}" data-k="r" style="border:1px solid var(--bd);border-radius:5px;padding:4px"><option value="antecipa"${a.r==='antecipa'?' selected':''}>Antecipa</option><option value="prorroga"${a.r==='prorroga'?' selected':''}>Prorroga</option><option value="nominal"${a.r==='nominal'?' selected':''}>Nominal</option></select></td><td><button class="btn sm er" onclick="CFG.agenda.splice(${i},1);renderAgCfg()">×</button></td></tr>`).join('');}
+function lerAgCfg(){const ag=(CFG.agenda||AG_DEF).map(a=>({...a}));document.querySelectorAll('#cf_ag [data-i]').forEach(e=>{const a=ag[+e.dataset.i];a[e.dataset.k]=e.dataset.k==='d'?+e.value:e.value;});return ag;}
+function addAgenda(){CFG.agenda=lerAgCfg();CFG.agenda.push({n:'Nova obrigação',t:'dia',d:20,r:'antecipa'});renderAgCfg();}
+function resetAgenda(){CFG.agenda=JSON.parse(JSON.stringify(AG_DEF));renderAgCfg();}
+function salvarAgenda(){CFG.agenda=lerAgCfg();LS.set('afp_cfg',CFG);toast('Agenda salva.');}
+function salvarCfg(){const c=limpaDoc($('cf_cnpj').value);if(c&&!cnpjValido(c)){alert('CNPJ do tomador inválido.');return;}CFG.cnpj=c;CFG.cnpjs=$('cf_cnpjs').value;CFG.uf=$('cf_uf').value.toUpperCase();CFG.mun=$('cf_mun').value;CFG.tol=m('cf_tol')||0.05;CFG.iss=pc('cf_iss');CFG.fer=$('cf_fer').value;CFG.agenda=lerAgCfg();LS.set('afp_cfg',CFG);toast('Configurações salvas.');}
 
-                const isOptante = data.opcao_pelo_simples === true;
-                document.getElementById('pj_override_enquadramento').value = isOptante ? "SIMPLES" : "NORMAL";
-                executarMudancaVisualEnquadramento(isOptante);
-                
-            } catch (error) {
-                document.getElementById('pj_override_enquadramento').value = "NORMAL";
-                forçarMudançaEnquadramento();
-            } finally {
-                btn.innerHTML = 'Analisar Empresa';
-                document.getElementById('result_box').style.display = 'block';
-            }
-        }
+/* ---------- util ---------- */
+function toast(t){let e=$('toast');if(!e){e=document.createElement('div');e.id='toast';e.style.cssText='position:fixed;bottom:18px;right:18px;background:#0b1120;color:#fff;padding:10px 16px;border-radius:8px;font-weight:600;font-size:12.5px;z-index:99;box-shadow:0 8px 20px rgba(0,0,0,.2);transition:.3s';document.body.appendChild(e);}e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,2600);}
 
-        function forçarMudançaEnquadramento() {
-            let status = document.getElementById('pj_override_enquadramento').value;
-            executarMudancaVisualEnquadramento(status === "SIMPLES");
-        }
-
-        function executarMudancaVisualEnquadramento(isOptante) {
-            const reinfAlert = document.getElementById('reinf_alert');
-            const simplesAlert = document.getElementById('simples_alert');
-            const colunasFederais = document.querySelectorAll('.federais-col');
-            const isencaoCheck = document.getElementById('pj_isencao_federais');
-
-            if (isOptante) {
-                reinfAlert.style.display = 'none'; 
-                simplesAlert.style.display = 'flex';
-                isencaoCheck.checked = false;
-                isencaoCheck.disabled = true;
-                colunasFederais.forEach(col => col.style.display = 'none');
-                document.getElementById('pj_liminar_msg').style.display = 'none';
-            } else {
-                reinfAlert.style.display = 'flex'; 
-                simplesAlert.style.display = 'none';
-                isencaoCheck.disabled = false;
-                colunasFederais.forEach(col => col.style.display = isencaoCheck.checked ? 'none' : 'flex');
-            }
-            rodarCalculoPJ();
-        }
-
-        function rodarCalculoPJ() {
-            let isSimples = document.getElementById('pj_override_enquadramento').value === "SIMPLES";
-            let liminarAtiva = document.getElementById('pj_isencao_federais').checked;
-            let fat = parseValor('pj_faturamento');
-            let aIss = parsePercentual('pj_a_iss');
-            let inssRule = document.getElementById('pj_incide_inss').value;
-
-            if (!isSimples) {
-                document.getElementById('pj_liminar_msg').style.display = liminarAtiva ? 'flex' : 'none';
-                document.querySelectorAll('.federais-col').forEach(col => col.style.display = liminarAtiva ? 'none' : 'flex');
-            }
-
-            let bloqueiaFederais = isSimples || liminarAtiva;
-            let vPis = bloqueiaFederais ? 0 : fat * 0.0065;
-            let vCof = bloqueiaFederais ? 0 : fat * 0.03;
-            let vCsl = bloqueiaFederais ? 0 : fat * 0.01;
-            
-            if (!bloqueiaFederais && (vPis + vCof + vCsl) <= 10) { vPis = 0; vCof = 0; vCsl = 0; }
-
-            let vIr = bloqueiaFederais ? 0 : fat * 0.015;
-            if (vIr <= 10) vIr = 0;
-
-            let vInss = 0;
-            if (inssRule === "11_100") vInss = fat * 1.00 * 0.11;
-            else if (inssRule === "11_50") vInss = fat * 0.50 * 0.11;
-            else if (inssRule === "11_30") vInss = fat * 0.30 * 0.11;
-
-            if (vInss <= 10) vInss = 0;
-
-            let vIss = fat * (aIss / 100);
-            let totalRetido = vPis + vCof + vCsl + vIr + vIss + vInss;
-            let liquido = fat - totalRetido;
-
-            if (!bloqueiaFederais) {
-                formatarTela('pj_v_pis', vPis); formatarTela('pj_v_cofins', vCof);
-                formatarTela('pj_v_csll', vCsl); formatarTela('pj_v_ir', vIr);
-            }
-            
-            formatarTela('pj_v_inss', vInss); formatarTela('pj_v_iss', vIss);
-            formatarTela('pj_total_retido', totalRetido); formatarTela('pj_liquido', liquido);
-        }
-
-        function alternarTipoAvulso() {
-            let tipo = document.getElementById('av_tipo_pessoa').value;
-            let pjElements = document.querySelectorAll('.av-only-pj');
-            let pfElements = document.querySelectorAll('.av-only-pf');
-            
-            if (tipo === 'PJ') {
-                pjElements.forEach(el => el.style.display = '');
-                pfElements.forEach(el => el.style.display = 'none');
-                document.getElementById('av_titulo').innerHTML = '<i class="fa-solid fa-building"></i> Calculadora Avulsa (Pessoa Jurídica/Pessoa Física)';
-            } else {
-                pjElements.forEach(el => el.style.display = 'none');
-                pfElements.forEach(el => el.style.display = '');
-                document.getElementById('av_titulo').innerHTML = '<i class="fa-solid fa-user-tie"></i> Calculadora Avulsa (Pessoa Física)';
-            }
-            rodarCalculoAvulso();
-        }
-
-        function rodarCalculoAvulso() {
-            let tipo = document.getElementById('av_tipo_pessoa').value;
-            let fat = parseValor('av_faturamento');
-            let aIss = parsePercentual('av_a_iss');
-            let vIss = fat * (aIss / 100);
-
-            if (tipo === 'PJ') {
-                let isSimples = document.getElementById('av_regime').value === "SIMPLES";
-                let liminarAtiva = document.getElementById('av_isencao_federais').checked;
-                let inssRule = document.getElementById('av_incide_inss').value;
-
-                let bloqueiaFederais = isSimples || liminarAtiva;
-
-                document.querySelectorAll('.av-federais-col-av').forEach(col => { 
-                    col.style.display = bloqueiaFederais ? 'none' : 'flex'; 
-                });
-
-                let vPis = bloqueiaFederais ? 0 : fat * 0.0065;
-                let vCof = bloqueiaFederais ? 0 : fat * 0.03;
-                let vCsl = bloqueiaFederais ? 0 : fat * 0.01;
-                if (!bloqueiaFederais && (vPis + vCof + vCsl) <= 10) { vPis = 0; vCof = 0; vCsl = 0; }
-
-                let vIr = bloqueiaFederais ? 0 : fat * 0.015;
-                if (vIr <= 10) vIr = 0;
-
-                let vInss = 0;
-                if (inssRule === "11_100") vInss = fat * 1.00 * 0.11;
-                else if (inssRule === "11_50") vInss = fat * 0.50 * 0.11;
-                else if (inssRule === "11_30") vInss = fat * 0.30 * 0.11;
-
-                if (vInss <= 10) vInss = 0;
-
-                let totalRetido = vPis + vCof + vCsl + vIr + vIss + vInss;
-                let liquido = fat - totalRetido;
-
-                if (!bloqueiaFederais) {
-                    formatarTela('av_v_pis', vPis); formatarTela('av_v_cofins', vCof);
-                    formatarTela('av_v_csll', vCsl); formatarTela('av_v_ir', vIr);
-                }
-                formatarTela('av_v_inss', vInss); formatarTela('av_v_iss_pj', vIss);
-                formatarTela('av_total_retido_pj', totalRetido); formatarTela('av_liquido_pj', liquido);
-                
-            } else {
-                let pInss = 0.11; 
-                let numDep = parseInt(document.getElementById('av_pf_dependentes').value) || 0;
-                let baseInss = Math.min(fat, TETO_INSS);
-                let vInss = baseInss * pInss;
-                
-                let deducoesLegais = vInss + (numDep * 189.59);
-                let baseIrrf = Math.max(0, fat - Math.max(deducoesLegais, 607.20));
-                let vIrrf = 0;
-
-                for(let f of TAB_IRRF) {
-                    if(baseIrrf <= f.lim) { vIrrf = (baseIrrf * f.aliq) - f.ded; break; }
-                }
-                if (vIrrf <= 10) vIrrf = 0;
-
-                let totalRetido = vInss + vIrrf + vIss;
-                formatarTela('av_pf_base_inss', baseInss); formatarTela('av_pf_v_inss', vInss);
-                formatarTela('av_pf_base_ir', baseIrrf); formatarTela('av_pf_v_ir', vIrrf);
-                formatarTela('av_v_iss_pf', vIss); formatarTela('av_total_retido_pf', totalRetido);
-                formatarTela('av_liquido_pf', fat - totalRetido);
-            }
-        }
-
-        function rodarCalculoPF() {
-            let brutoAtual = parseValor('pf_bruto_atual');
-            let baseExt = parseValor('pf_base_ext');
-            let irrfAnt = parseValor('pf_irrf_ant');
-            let pInss = parseFloat(document.getElementById('pf_perfil').value) / 100;
-
-            let baseDisponivelTeto = Math.max(0, TETO_INSS - baseExt);
-            let baseInssRecibo = Math.min((brutoAtual + parseValor('pf_bruto_ant')), baseDisponivelTeto);
-            let inssDesteRecibo = baseInssRecibo * pInss;
-            
-            let deducoes = inssDesteRecibo + ((parseInt(document.getElementById('pf_dependentes').value) || 0) * parseValor('pf_val_dep'));
-            let baseIrrf = Math.max(0, (brutoAtual + parseValor('pf_bruto_ant')) - Math.max(deducoes, 607.20));
-            
-            let irrfNormal = 0;
-            for(let f of TAB_IRRF) { if(baseIrrf <= f.lim) { irrfNormal = (baseIrrf * f.aliq) - f.ded; break; } }
-            irrfNormal = Math.max(0, irrfNormal - irrfAnt);
-            if (irrfNormal <= 10) irrfNormal = 0;
-
-            let total = inssDesteRecibo + irrfNormal;
-            formatarTela('pf_base_patr', brutoAtual); formatarTela('pf_inss_patr', brutoAtual * 0.20);
-            formatarTela('pf_base_trab', baseInssRecibo); formatarTela('pf_inss_trab', inssDesteRecibo);
-            formatarTela('pf_base_irrf', baseIrrf); formatarTela('pf_irrf', irrfNormal);
-            formatarTela('pf_debitos', total); formatarTela('pf_liquido', brutoAtual - total);
-        }
-
-        window.onload = function() {
-            alternarTipoAvulso();
-            rodarCalculoPJ();
-            rodarCalculoPF();
-        };
-    </script>
+/* ---------- init ---------- */
+(function(){const h=iso(hoje());$('chip-hoje').innerHTML='<i class="fa-regular fa-calendar"></i> '+new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+ $('pj_emi').value=h;$('pj_pag').value=h;$('rp_pag').value=h;$('pj_iss').value=fmtR(CFG.iss);$('pj_preset').value='prof';aplicarPreset();$('pj_issret').value='1';
+ calcRPAUI();calcRF();renderNFe();renderNS();$('nfm').dispatchEvent(new Event('input'));
+ if(!CFG.cnpj)setTimeout(()=>toast('Dica: informe o CNPJ da Unimed em Configurações para validar destinatário/tomador.'),800);
+ aba(LS.get('afp_aba','painel'));})();
+</script>
 </body>
 </html>
